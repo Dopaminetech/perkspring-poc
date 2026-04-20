@@ -1,0 +1,1381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PerkSpring — Partner Portal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --sidebar-bg: #0a1628;
+      --sidebar-active: #1a3a6e;
+      --sidebar-text: #8899b4;
+      --sidebar-text-active: #ffffff;
+      --topbar-bg: #111d33;
+      --body-bg: #f0f2f5;
+      --card-bg: #ffffff;
+      --navy: #0f2b5b;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --red: #dc2626;
+      --red-light: #fee2e2;
+      --orange: #ea580c;
+      --orange-light: #fff7ed;
+      --purple: #7c3aed;
+      --purple-light: #ede9fe;
+      --gray-100: #f8fafc;
+      --gray-200: #e2e8f0;
+      --gray-300: #cbd5e1;
+      --gray-500: #64748b;
+      --gray-700: #334155;
+      --gray-900: #0f172a;
+      --radius: 10px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--body-bg); color: var(--gray-900); display: flex; min-height: 100vh; overflow-x: hidden; }
+
+    /* Sidebar */
+    .sidebar { width: 220px; background: var(--sidebar-bg); display: flex; flex-direction: column; position: fixed; top: 0; left: 0; bottom: 0; z-index: 10; }
+    .sidebar-logo { padding: 20px 18px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .sidebar-logo .logo-icon { width: 32px; height: 32px; background: var(--blue); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .sidebar-logo .logo-icon svg { width: 18px; height: 18px; fill: white; }
+    .sidebar-logo span { color: white; font-weight: 700; font-size: 15px; letter-spacing: -0.3px; }
+    .sidebar-nav { flex: 1; padding: 12px 8px; overflow-y: auto; }
+    .nav-section { margin-bottom: 8px; }
+    .nav-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--sidebar-text); padding: 8px 12px 4px; font-weight: 600; }
+    .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 8px; color: var(--sidebar-text); font-size: 13.5px; font-weight: 500; cursor: pointer; transition: all 0.15s; text-decoration: none; user-select: none; }
+    .nav-item:hover { background: rgba(255,255,255,0.05); color: #c4d0e2; }
+    .nav-item.active { background: var(--sidebar-active); color: var(--sidebar-text-active); }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item .badge { margin-left: auto; background: var(--blue); color: white; font-size: 10px; padding: 2px 7px; border-radius: 10px; font-weight: 600; }
+
+    /* Topbar */
+    .topbar { height: 56px; background: var(--topbar-bg); display: flex; align-items: center; padding: 0 24px; gap: 16px; position: fixed; top: 0; left: 220px; right: 0; z-index: 9; }
+    .search-bar { flex: 1; max-width: 480px; position: relative; }
+    .search-bar input { width: 100%; padding: 8px 12px 8px 36px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 13px; outline: none; transition: all 0.2s; }
+    .search-bar input:focus { background: rgba(255,255,255,0.12); border-color: var(--blue); }
+    .search-bar input::placeholder { color: var(--sidebar-text); }
+    .search-bar svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--sidebar-text); }
+    .search-results { position: absolute; top: 100%; left: 0; right: 0; background: var(--topbar-bg); border: 1px solid rgba(255,255,255,0.12); border-radius: 0 0 8px 8px; display: none; max-height: 300px; overflow-y: auto; }
+    .search-results.visible { display: block; }
+    .search-result-item { padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--sidebar-text); display: flex; align-items: center; gap: 10px; }
+    .search-result-item:hover { background: rgba(255,255,255,0.08); color: white; }
+    .search-result-item .sr-type { font-size: 10px; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+    .search-result-item .sr-label { flex: 1; }
+    .topbar-right { display: flex; align-items: center; gap: 16px; margin-left: auto; }
+    .topbar-icon { width: 34px; height: 34px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: var(--sidebar-text); cursor: pointer; position: relative; }
+    .topbar-icon:hover { background: rgba(255,255,255,0.08); }
+    .topbar-icon svg { width: 18px; height: 18px; }
+    .notif-dot { width: 8px; height: 8px; background: var(--red); border-radius: 50%; position: absolute; top: 6px; right: 6px; }
+    .org-badge { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; padding: 4px 10px; color: white; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; cursor: pointer; }
+
+    /* Notification dropdown */
+    .notif-dropdown { position: absolute; top: 44px; right: 0; width: 320px; background: white; border-radius: var(--radius); box-shadow: 0 8px 30px rgba(0,0,0,0.15); border: 1px solid var(--gray-200); display: none; z-index: 100; }
+    .notif-dropdown.visible { display: block; }
+    .notif-dropdown-header { padding: 12px 16px; border-bottom: 1px solid var(--gray-200); font-weight: 700; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .notif-dropdown-header button { background: none; border: none; color: var(--blue); font-size: 12px; cursor: pointer; font-weight: 600; }
+    .notif-item { padding: 12px 16px; border-bottom: 1px solid var(--gray-200); cursor: pointer; transition: background 0.15s; }
+    .notif-item:hover { background: var(--gray-100); }
+    .notif-item:last-child { border-bottom: none; }
+    .notif-item.unread { background: var(--blue-light); }
+    .notif-item .ni-title { font-size: 13px; font-weight: 600; }
+    .notif-item .ni-desc { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .notif-item .ni-time { font-size: 11px; color: var(--gray-500); margin-top: 4px; }
+
+    /* Main */
+    .main { margin-left: 220px; margin-top: 56px; flex: 1; padding: 24px; min-height: calc(100vh - 56px); }
+
+    /* Page header */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+    .page-header h1 { font-size: 22px; font-weight: 700; }
+    .page-header .subtitle { color: var(--gray-500); font-size: 14px; margin-top: 2px; }
+    .header-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    /* Buttons */
+    .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; text-decoration: none; white-space: nowrap; }
+    .btn:active { transform: scale(0.97); }
+    .btn svg { width: 16px; height: 16px; }
+    .btn-primary { background: var(--blue); color: white; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-outline { background: white; color: var(--gray-700); border: 1px solid var(--gray-200); }
+    .btn-outline:hover { background: var(--gray-100); }
+    .btn-success { background: var(--green); color: white; }
+    .btn-success:hover { background: #15803d; }
+    .btn-danger { background: var(--red); color: white; }
+    .btn-danger:hover { background: #b91c1c; }
+    .btn-sm { padding: 6px 12px; font-size: 12px; }
+    .btn-ghost { background: transparent; color: var(--gray-500); border: 1px solid transparent; }
+    .btn-ghost:hover { background: var(--gray-100); color: var(--gray-700); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Cards */
+    .card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-200); }
+    .card-header { padding: 16px 20px; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+    .card-header h3 { font-size: 14px; font-weight: 600; }
+    .card-body { padding: 20px; }
+
+    /* Stat cards */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+    .stat-card { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--gray-200); padding: 20px; transition: all 0.2s; cursor: default; }
+    .stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
+    .stat-card .label { font-size: 12px; color: var(--gray-500); font-weight: 500; text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-card .value { font-size: 28px; font-weight: 800; margin-top: 6px; color: var(--navy); }
+    .stat-card .change { font-size: 12px; margin-top: 4px; font-weight: 600; }
+    .stat-card .change.up { color: var(--green); }
+    .stat-card .sub { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+    /* Quick actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+    .quick-action { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--blue); color: white; border-radius: var(--radius); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s; border: none; width: 100%; }
+    .quick-action:hover { transform: translateY(-2px); box-shadow: 0 4px 14px rgba(0,0,0,0.2); }
+    .quick-action:active { transform: scale(0.98); }
+    .quick-action.green { background: var(--green); }
+    .quick-action svg { width: 18px; height: 18px; }
+
+    /* Chart */
+    .chart-area { height: 240px; display: flex; align-items: flex-end; justify-content: space-around; padding: 16px 12px; gap: 4px; position: relative; }
+    .chart-bar-group { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; position: relative; }
+    .chart-bars { display: flex; gap: 3px; align-items: flex-end; }
+    .chart-bar { width: 14px; border-radius: 3px 3px 0 0; transition: all 0.3s ease-out; cursor: pointer; position: relative; }
+    .chart-bar:hover { opacity: 0.8; }
+    .chart-bar.verify { background: var(--green); }
+    .chart-bar.redeem { background: var(--blue); }
+    .chart-label { font-size: 10px; color: var(--gray-500); }
+    .chart-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 5; }
+    .chart-bar-group:hover .chart-tooltip { opacity: 1; }
+
+    /* Grid */
+    .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+
+    /* Activity feed */
+    .activity-item { display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); cursor: pointer; transition: background 0.15s; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+    .activity-item:hover { background: var(--gray-100); }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .activity-icon.blue { background: var(--blue-light); color: var(--blue); }
+    .activity-icon.green { background: var(--green-light); color: var(--green); }
+    .activity-icon.orange { background: var(--orange-light); color: var(--orange); }
+    .activity-icon svg { width: 18px; height: 18px; }
+    .activity-text { font-size: 13px; line-height: 1.4; }
+    .activity-text strong { font-weight: 600; }
+    .activity-time { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); font-weight: 600; padding: 10px 16px; border-bottom: 2px solid var(--gray-200); user-select: none; }
+    th.sortable { cursor: pointer; }
+    th.sortable:hover { color: var(--blue); }
+    th.sortable::after { content: ' \u2195'; font-size: 10px; }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--gray-200); font-size: 13px; }
+    tr:hover td { background: var(--gray-100); }
+    tr.selected td { background: var(--blue-light); }
+    .status-pill { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+    .status-pill.active { background: var(--green-light); color: var(--green); }
+    .status-pill.pending { background: var(--orange-light); color: var(--orange); }
+    .status-pill.inactive { background: var(--gray-200); color: var(--gray-500); }
+
+    /* Checkbox */
+    .checkbox { width: 16px; height: 16px; border: 2px solid var(--gray-300); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+    .checkbox.checked { background: var(--blue); border-color: var(--blue); }
+    .checkbox.checked::after { content: '\2713'; color: white; font-size: 11px; font-weight: 700; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--gray-200); margin-bottom: 20px; }
+    .tab { padding: 10px 16px; font-size: 13px; font-weight: 500; color: var(--gray-500); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.15s; user-select: none; }
+    .tab:hover { color: var(--gray-700); }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+
+    /* Tab content */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; animation: fadeUp 0.25s ease-out; }
+
+    /* Forms */
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block; }
+    .form-input { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-300); border-radius: 8px; font-size: 13px; outline: none; transition: all 0.2s; font-family: inherit; }
+    .form-input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+    select.form-input { appearance: none; background: white url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; padding-right: 32px; cursor: pointer; }
+    textarea.form-input { resize: vertical; min-height: 80px; }
+
+    /* Upload zone */
+    .upload-zone { border: 2px dashed var(--gray-300); border-radius: var(--radius); padding: 40px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .upload-zone:hover, .upload-zone.dragover { border-color: var(--blue); background: var(--blue-light); }
+    .upload-zone svg { width: 40px; height: 40px; color: var(--gray-500); margin-bottom: 12px; }
+    .upload-zone p { color: var(--gray-500); font-size: 14px; }
+    .upload-zone .upload-cta { color: var(--blue); font-weight: 600; }
+
+    /* Progress bar */
+    .progress-bar { height: 8px; background: var(--gray-200); border-radius: 4px; overflow: hidden; margin-top: 12px; }
+    .progress-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width 0.3s ease-out; width: 0%; }
+    .progress-fill.success { background: var(--green); }
+    .upload-status { font-size: 13px; color: var(--gray-500); margin-top: 8px; text-align: center; }
+
+    /* Flow builder */
+    .flow-steps { display: flex; align-items: center; gap: 0; padding: 24px 0; overflow-x: auto; }
+    .flow-step { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 140px; }
+    .flow-node { width: 120px; padding: 14px; background: white; border: 2px solid var(--gray-200); border-radius: var(--radius); text-align: center; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; position: relative; }
+    .flow-node:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(37,99,235,0.15); transform: translateY(-2px); }
+    .flow-node.trigger { border-color: var(--green); background: var(--green-light); }
+    .flow-node.action { border-color: var(--blue); background: var(--blue-light); }
+    .flow-node .node-icon { font-size: 20px; margin-bottom: 4px; }
+    .flow-node .remove-node { position: absolute; top: -8px; right: -8px; width: 20px; height: 20px; background: var(--red); color: white; border-radius: 50%; border: none; font-size: 12px; cursor: pointer; display: none; align-items: center; justify-content: center; line-height: 1; }
+    .flow-node:hover .remove-node { display: flex; }
+    .flow-arrow { width: 40px; display: flex; align-items: center; justify-content: center; color: var(--gray-300); font-size: 20px; }
+    .add-step-btn { width: 40px; height: 40px; border-radius: 50%; border: 2px dashed var(--gray-300); background: white; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--gray-500); transition: all 0.2s; margin-left: 8px; }
+    .add-step-btn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+
+    /* Promo code bank */
+    .promo-card { display: flex; align-items: center; gap: 16px; padding: 16px; border: 1px solid var(--gray-200); border-radius: var(--radius); margin-bottom: 10px; transition: all 0.2s; cursor: pointer; }
+    .promo-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.08); transform: translateX(4px); }
+    .promo-logo { width: 48px; height: 48px; border-radius: 8px; background: var(--gray-100); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: var(--navy); }
+    .promo-info { flex: 1; }
+    .promo-info .name { font-weight: 600; font-size: 14px; }
+    .promo-info .offer { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .promo-code { font-family: 'SF Mono', monospace; background: var(--gray-100); padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; color: var(--navy); cursor: pointer; position: relative; }
+    .promo-code:hover { background: var(--blue-light); }
+    .promo-code.copied::after { content: 'Copied!'; position: absolute; top: -28px; left: 50%; transform: translateX(-50%); background: var(--gray-900); color: white; padding: 3px 8px; border-radius: 4px; font-size: 10px; white-space: nowrap; }
+    .promo-expiry { font-size: 11px; color: var(--gray-500); min-width: 100px; text-align: right; }
+
+    /* Role cards */
+    .role-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+    .role-card { padding: 16px; border: 2px solid var(--gray-200); border-radius: var(--radius); text-align: center; cursor: pointer; transition: all 0.2s; }
+    .role-card:hover { border-color: var(--blue); transform: translateY(-2px); box-shadow: var(--shadow); }
+    .role-card .role-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+    .role-card .role-desc { font-size: 11px; color: var(--gray-500); }
+    .role-card .role-count { margin-top: 8px; font-size: 20px; font-weight: 800; color: var(--blue); }
+
+    /* Team members */
+    .member-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--gray-200); transition: background 0.15s; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+    .member-row:hover { background: var(--gray-100); }
+    .member-row:last-child { border-bottom: none; }
+    .member-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; flex-shrink: 0; }
+    .member-info { flex: 1; }
+    .member-info .name { font-weight: 600; font-size: 13px; }
+    .member-info .email { font-size: 12px; color: var(--gray-500); }
+    .member-role { font-size: 12px; font-weight: 600; color: var(--gray-700); background: var(--gray-100); padding: 3px 10px; border-radius: 12px; }
+    .member-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .member-row:hover .member-actions { opacity: 1; }
+
+    /* Compliance badges */
+    .compliance-row { display: flex; gap: 16px; margin-bottom: 24px; }
+    .compliance-badge { flex: 1; padding: 20px; border: 1px solid var(--gray-200); border-radius: var(--radius); display: flex; align-items: center; gap: 14px; transition: all 0.2s; }
+    .compliance-badge:hover { box-shadow: var(--shadow); transform: translateY(-2px); }
+    .compliance-icon { width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+    .compliance-icon.pass { background: var(--green-light); }
+    .compliance-info .title { font-weight: 700; font-size: 14px; }
+    .compliance-info .status { font-size: 12px; color: var(--gray-500); }
+
+    /* Audit log */
+    .log-entry { display: flex; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--gray-200); font-size: 13px; transition: background 0.15s; margin: 0 -20px; padding-left: 20px; padding-right: 20px; }
+    .log-entry:hover { background: var(--gray-100); }
+    .log-entry:last-child { border-bottom: none; }
+    .log-time { color: var(--gray-500); font-family: monospace; font-size: 12px; min-width: 140px; }
+    .log-user { font-weight: 600; min-width: 120px; }
+    .log-action { color: var(--gray-700); }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+    .modal-overlay.visible { display: flex; }
+    .modal { background: white; border-radius: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-width: 520px; width: 90%; max-height: 85vh; overflow-y: auto; animation: modalIn 0.25s ease-out; }
+    .modal-lg { max-width: 680px; }
+    .modal-header { padding: 20px 24px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .modal-header h2 { font-size: 18px; font-weight: 700; }
+    .modal-close { width: 32px; height: 32px; border-radius: 8px; border: none; background: var(--gray-100); cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; color: var(--gray-500); }
+    .modal-close:hover { background: var(--gray-200); }
+    .modal-body { padding: 0 24px 24px; }
+    .modal-footer { padding: 16px 24px; border-top: 1px solid var(--gray-200); display: flex; justify-content: flex-end; gap: 8px; }
+
+    @keyframes modalIn {
+      from { opacity: 0; transform: scale(0.95) translateY(10px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Toast */
+    .toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 2000; display: flex; flex-direction: column-reverse; gap: 8px; }
+    .toast { padding: 12px 20px; border-radius: 10px; color: white; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 10px; min-width: 280px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); animation: toastIn 0.3s ease-out; cursor: pointer; }
+    .toast.info { background: var(--navy); }
+    .toast.success { background: var(--green); }
+    .toast.error { background: var(--red); }
+    .toast.warning { background: var(--orange); }
+    .toast.exiting { animation: toastOut 0.3s ease-in forwards; }
+    .toast svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+    @keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes toastOut { from { opacity: 1; transform: translateX(0); } to { opacity: 0; transform: translateX(40px); } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Page views */
+    .page-view { display: none; }
+    .page-view.active { display: block; animation: fadeUp 0.25s ease-out; }
+
+    /* Greeting */
+    .greeting { font-size: 15px; color: var(--gray-500); margin-bottom: 16px; display: flex; justify-content: space-between; }
+    .greeting strong { color: var(--gray-900); }
+
+    /* Inline member search */
+    .inline-search { position: relative; }
+    .inline-search input { padding-right: 36px; }
+    .inline-search .clear-btn { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: var(--gray-500); font-size: 16px; display: none; }
+    .inline-search .clear-btn.visible { display: block; }
+
+    /* Bulk actions bar */
+    .bulk-bar { background: var(--blue); color: white; padding: 10px 20px; border-radius: var(--radius); margin-bottom: 16px; display: none; align-items: center; gap: 16px; animation: fadeUp 0.2s ease-out; }
+    .bulk-bar.visible { display: flex; }
+    .bulk-bar .bulk-count { font-weight: 700; }
+    .bulk-bar .btn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); }
+    .bulk-bar .btn:hover { background: rgba(255,255,255,0.3); }
+
+    /* Skeleton loader */
+    .skeleton { background: linear-gradient(90deg, var(--gray-200) 25%, var(--gray-100) 50%, var(--gray-200) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 4px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* Filter chips */
+    .filter-chips { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .chip { padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; border: 1px solid var(--gray-200); cursor: pointer; transition: all 0.15s; user-select: none; }
+    .chip:hover { border-color: var(--blue); }
+    .chip.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+    /* Live preview iframe */
+    .preview-frame { width: 100%; height: 500px; border: 1px solid var(--gray-200); border-radius: 8px; background: white; }
+
+    /* Context menu */
+    .context-menu { position: fixed; background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border: 1px solid var(--gray-200); padding: 6px; z-index: 500; min-width: 160px; display: none; }
+    .context-menu.visible { display: block; }
+    .context-menu-item { padding: 8px 12px; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+    .context-menu-item:hover { background: var(--gray-100); }
+    .context-menu-item.danger { color: var(--red); }
+    .context-menu-divider { height: 1px; background: var(--gray-200); margin: 4px 0; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <span>PerkSpring</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-page="members" onclick="showPage('members', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Members
+        <span class="badge" id="member-count-badge">1.2M</span>
+      </a>
+      <a class="nav-item" data-page="reports" onclick="showPage('reports', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Reports
+      </a>
+      <a class="nav-item" data-page="configurations" onclick="showPage('configurations', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Configurations
+      </a>
+      <a class="nav-item" data-page="integrations" onclick="showPage('integrations', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+        Integrations
+        <span class="badge">27</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Settings</div>
+      <a class="nav-item" data-page="team" onclick="showPage('team', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Team & Security
+      </a>
+      <a class="nav-item" data-page="billing" onclick="showPage('billing', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
+      </a>
+      <a class="nav-item" data-page="help" onclick="showPage('help', this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help & Docs
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" id="global-search" placeholder="Search members, reports, retailers..." autocomplete="off" />
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <div class="topbar-right">
+    <div class="topbar-icon" id="notif-bell" onclick="toggleNotifications()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <div class="notif-dot" id="notif-dot"></div>
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-dropdown-header">Notifications <button onclick="markAllRead(event)">Mark all read</button></div>
+        <div class="notif-item unread" onclick="toast('Roster upload complete','success')"><div class="ni-title">Roster Upload Complete</div><div class="ni-desc">3,412 new members processed successfully</div><div class="ni-time">2 min ago</div></div>
+        <div class="notif-item unread" onclick="toast('Chase Wallet approved','success')"><div class="ni-title">New Integration Approved</div><div class="ni-desc">Chase Wallet is ready to configure</div><div class="ni-time">3 hrs ago</div></div>
+        <div class="notif-item" onclick="toast('Report ready for download','info')"><div class="ni-title">Report Ready</div><div class="ni-desc">Q1 Verification Summary is ready to download</div><div class="ni-time">Yesterday</div></div>
+        <div class="notif-item" onclick="toast('Proflowers code expiring Apr 22','warning')"><div class="ni-title">Promo Code Expiring</div><div class="ni-desc">Proflowers PFLW-EMP15 expires in 3 days</div><div class="ni-time">Yesterday</div></div>
+      </div>
+    </div>
+    <div class="topbar-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+    <div class="org-badge" onclick="toast('Organization switcher coming soon','info')">AAA</div>
+    <div class="user-avatar" onclick="toast('Profile settings coming soon','info')">JS</div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Context Menu -->
+<div class="context-menu" id="context-menu">
+  <div class="context-menu-item" onclick="contextAction('view')">View Details</div>
+  <div class="context-menu-item" onclick="contextAction('edit')">Edit</div>
+  <div class="context-menu-item" onclick="contextAction('export')">Export</div>
+  <div class="context-menu-divider"></div>
+  <div class="context-menu-item danger" onclick="contextAction('delete')">Delete</div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-container"></div>
+</div>
+
+<!-- Main Content -->
+<main class="main">
+
+  <!-- ═══════════ DASHBOARD ═══════════ -->
+  <div class="page-view active" id="page-dashboard">
+    <div class="greeting">
+      <span>Good morning, <strong>AAA Partner Team</strong></span>
+      <span>April 19, 2026</span>
+    </div>
+    <div class="quick-actions">
+      <button class="quick-action" onclick="showPage('members', document.querySelector('[data-page=members]')); setTimeout(()=>document.getElementById('upload-tab').click(),100)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Upload New Roster
+      </button>
+      <button class="quick-action" onclick="openReportBuilder()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Run Quick Report
+      </button>
+      <button class="quick-action green" onclick="openLivePreview()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Test Verification Flow
+      </button>
+    </div>
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Total Members</div><div class="value" data-count="1247893">0</div><div class="change up">+2.4%</div></div>
+      <div class="stat-card"><div class="label">30-Day Verifications</div><div class="value" data-count="48291">0</div><div class="sub">Avg 1,610/day</div></div>
+      <div class="stat-card"><div class="label">Avg. Redemption Rate</div><div class="value" data-count="14.8" data-suffix="%" data-decimal="1">0%</div><div class="change up">+1.2%</div></div>
+      <div class="stat-card"><div class="label">Connected Retailers</div><div class="value" data-count="27">0</div><div class="sub">3 pending invitations</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="card">
+        <div class="card-header">
+          <h3>Verification & Redemption — Last 30 Days</h3>
+          <div style="display:flex;gap:16px;font-size:12px;">
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block;"></span> Verifications</span>
+            <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--blue);border-radius:2px;display:inline-block;"></span> Redemptions</span>
+          </div>
+        </div>
+        <div class="card-body"><div class="chart-area" id="chart"></div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Activity</h3><button class="btn btn-sm btn-ghost" onclick="toast('Activity feed refreshed','info')">Refresh</button></div>
+        <div class="card-body" style="padding:12px 20px;">
+          <div class="activity-item" onclick="showPage('members', document.querySelector('[data-page=members]'))">
+            <div class="activity-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div>
+            <div><div class="activity-text"><strong>New roster uploaded</strong> — 3,412 members</div><div class="activity-time">2 min ago</div></div>
+          </div>
+          <div class="activity-item" onclick="showPage('integrations', document.querySelector('[data-page=integrations]'))">
+            <div class="activity-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+            <div><div class="activity-text"><strong>Walmart promo code</strong> — 3,021 redemptions</div><div class="activity-time">14 min ago</div></div>
+          </div>
+          <div class="activity-item" onclick="showPage('integrations', document.querySelector('[data-page=integrations]'))">
+            <div class="activity-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+            <div><div class="activity-text"><strong>Target promo code</strong> — 477 redemptions</div><div class="activity-time">18 min ago</div></div>
+          </div>
+          <div class="activity-item" onclick="toast('Proflowers PFLW-EMP15 expires Apr 22','warning')">
+            <div class="activity-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+            <div><div class="activity-text"><strong>Proflowers code expiring</strong> — in 3 days</div><div class="activity-time">1 hr ago</div></div>
+          </div>
+          <div class="activity-item" onclick="showPage('integrations', document.querySelector('[data-page=integrations]'))">
+            <div class="activity-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+            <div><div class="activity-text"><strong>Chase Wallet</strong> integration approved</div><div class="activity-time">3 hrs ago</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ MEMBERS ═══════════ -->
+  <div class="page-view" id="page-members">
+    <div class="page-header">
+      <div><h1>Members</h1><div class="subtitle">Manage your member roster and audience segments</div></div>
+      <div class="header-actions">
+        <div class="inline-search">
+          <input class="form-input" id="member-search" placeholder="Search by hash prefix..." oninput="filterMembers()" style="width:220px;" />
+          <button class="clear-btn" id="member-search-clear" onclick="document.getElementById('member-search').value='';filterMembers();this.classList.remove('visible');">&times;</button>
+        </div>
+        <button class="btn btn-outline" onclick="openApiSyncModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg> API Sync</button>
+        <button class="btn btn-primary" onclick="document.getElementById('upload-tab').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg> Upload Roster</button>
+      </div>
+    </div>
+    <div class="tabs" id="members-tabs">
+      <div class="tab active" onclick="switchTab('members-tabs','members-tab-content',0,this)">All Members</div>
+      <div class="tab" onclick="switchTab('members-tabs','members-tab-content',1,this)">Audience Segments</div>
+      <div class="tab" id="upload-tab" onclick="switchTab('members-tabs','members-tab-content',2,this)">Upload Roster</div>
+    </div>
+
+    <!-- Tab 0: All Members -->
+    <div class="tab-content active" data-tabgroup="members-tab-content">
+      <div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="stat-card"><div class="label">Total Members</div><div class="value">1,247,893</div></div>
+        <div class="stat-card"><div class="label">Active (Last 90 Days)</div><div class="value">312,041</div></div>
+        <div class="stat-card"><div class="label">Segments Created</div><div class="value">8</div></div>
+      </div>
+      <div class="bulk-bar" id="bulk-bar"><span class="bulk-count" id="bulk-count">0 selected</span><button class="btn btn-sm" onclick="toast('Members exported to CSV','success');clearBulk()">Export Selected</button><button class="btn btn-sm" onclick="openSegmentModal()">Add to Segment</button><button class="btn btn-sm" onclick="confirmBulkDelete()">Delete</button><button class="btn btn-sm" onclick="clearBulk()">Clear</button></div>
+      <div class="filter-chips">
+        <div class="chip active" onclick="filterByStatus('all',this)">All</div>
+        <div class="chip" onclick="filterByStatus('active',this)">Active</div>
+        <div class="chip" onclick="filterByStatus('pending',this)">Pending</div>
+        <div class="chip" onclick="filterByStatus('inactive',this)">Inactive</div>
+      </div>
+      <div class="card">
+        <div class="card-body table-wrap" style="padding:0;">
+          <table>
+            <thead><tr>
+              <th style="width:32px;"><div class="checkbox" id="select-all-cb" onclick="toggleSelectAll()"></div></th>
+              <th class="sortable">Member Hash (SHA-256)</th>
+              <th class="sortable">Status</th>
+              <th class="sortable">Segment</th>
+              <th class="sortable">Added</th>
+              <th class="sortable">Last Verified</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="member-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 1: Audience Segments -->
+    <div class="tab-content" data-tabgroup="members-tab-content">
+      <div class="header-actions" style="margin-bottom:16px;"><button class="btn btn-primary" onclick="openSegmentModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Create Segment</button></div>
+      <div class="card">
+        <div class="card-body table-wrap" style="padding:0;">
+          <table>
+            <thead><tr><th>Segment Name</th><th>Members</th><th>Created</th><th>Last Updated</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><strong>All Members</strong></td><td>1,247,893</td><td>Jan 1, 2026</td><td>Apr 19, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('Segment view coming soon','info')">View</button></td></tr>
+              <tr><td><strong>Premium Tier</strong></td><td>84,201</td><td>Feb 15, 2026</td><td>Apr 18, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('Segment view coming soon','info')">View</button></td></tr>
+              <tr><td><strong>New Upload (Apr 14)</strong></td><td>3,412</td><td>Apr 14, 2026</td><td>Apr 14, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('Segment view coming soon','info')">View</button></td></tr>
+              <tr><td><strong>West Coast</strong></td><td>312,421</td><td>Mar 1, 2026</td><td>Apr 10, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('Segment view coming soon','info')">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Upload Roster -->
+    <div class="tab-content" data-tabgroup="members-tab-content">
+      <div class="card">
+        <div class="card-header"><h3>Upload New Roster</h3></div>
+        <div class="card-body">
+          <div class="upload-zone" id="upload-zone" onclick="simulateUpload()" ondragover="event.preventDefault();this.classList.add('dragover')" ondragleave="this.classList.remove('dragover')" ondrop="event.preventDefault();this.classList.remove('dragover');simulateUpload()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <p>Drag & drop your CSV file here, or <span class="upload-cta">browse files</span></p>
+            <p style="font-size:12px;margin-top:8px;">Accepts: CSV with email addresses or user IDs. Max 5M rows.</p>
+          </div>
+          <div id="upload-progress-area" style="display:none;">
+            <div class="progress-bar"><div class="progress-fill" id="upload-progress"></div></div>
+            <div class="upload-status" id="upload-status">Uploading...</div>
+          </div>
+          <div style="display:flex;gap:12px;margin-top:16px;">
+            <label style="flex:1;"><span class="form-label">Upload Mode</span><select class="form-input" id="upload-mode"><option>Add to existing roster</option><option>Supersede existing roster</option></select></label>
+            <label style="flex:1;"><span class="form-label">Identifier Type</span><select class="form-input"><option>Email Address</option><option>User ID</option></select></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ REPORTS ═══════════ -->
+  <div class="page-view" id="page-reports">
+    <div class="page-header">
+      <div><h1>Reports</h1><div class="subtitle">Build custom reports and track performance</div></div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="openScheduleReportModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Schedule Report</button>
+        <button class="btn btn-primary" onclick="openReportBuilder()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Custom Report</button>
+      </div>
+    </div>
+    <div class="tabs" id="reports-tabs">
+      <div class="tab active" onclick="switchTab('reports-tabs','reports-tab-content',0,this)">Overview</div>
+      <div class="tab" onclick="switchTab('reports-tabs','reports-tab-content',1,this);openReportBuilder()">Custom Builder</div>
+      <div class="tab" onclick="switchTab('reports-tabs','reports-tab-content',2,this)">Scheduled</div>
+    </div>
+
+    <div class="tab-content active" data-tabgroup="reports-tab-content">
+      <div class="stats-row">
+        <div class="stat-card"><div class="label">Total Verifications</div><div class="value">284,019</div><div class="sub">All time</div></div>
+        <div class="stat-card"><div class="label">Total Members</div><div class="value">1,247,893</div></div>
+        <div class="stat-card"><div class="label">Top Integration</div><div class="value" style="font-size:20px;">Walmart</div><div class="sub">12,847 redemptions</div></div>
+        <div class="stat-card"><div class="label">Reports Generated</div><div class="value">47</div><div class="sub">This month</div></div>
+      </div>
+      <div class="card">
+        <div class="card-header"><h3>Recent Reports</h3></div>
+        <div class="card-body table-wrap" style="padding:0;">
+          <table>
+            <thead><tr><th>Report Name</th><th>Type</th><th>Date Range</th><th>Created</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td>Q1 Verification Summary</td><td>Verifications</td><td>Jan 1 – Mar 31</td><td>Apr 2, 2026</td><td><span class="status-pill active">Complete</span></td><td><div class="header-actions"><button class="btn btn-sm btn-outline" onclick="toast('Downloading PDF...','success')">PDF</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading CSV...','success')">CSV</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading Excel...','success')">Excel</button></div></td></tr>
+              <tr><td>Walmart Redemption Report</td><td>Redemptions</td><td>Mar 1 – Mar 31</td><td>Apr 1, 2026</td><td><span class="status-pill active">Complete</span></td><td><div class="header-actions"><button class="btn btn-sm btn-outline" onclick="toast('Downloading PDF...','success')">PDF</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading CSV...','success')">CSV</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading Excel...','success')">Excel</button></div></td></tr>
+              <tr><td>Member Growth Analysis</td><td>Members</td><td>Jan 1 – Apr 15</td><td>Apr 15, 2026</td><td><span class="status-pill active">Complete</span></td><td><div class="header-actions"><button class="btn btn-sm btn-outline" onclick="toast('Downloading PDF...','success')">PDF</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading CSV...','success')">CSV</button><button class="btn btn-sm btn-outline" onclick="toast('Downloading Excel...','success')">Excel</button></div></td></tr>
+              <tr><td>Weekly Digest — Auto</td><td>Summary</td><td>Apr 7 – Apr 13</td><td>Apr 14, 2026</td><td><span class="status-pill pending">Scheduled</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Report will be generated on schedule','info')">View</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="tab-content" data-tabgroup="reports-tab-content"><div id="report-builder-inline"></div></div>
+    <div class="tab-content" data-tabgroup="reports-tab-content">
+      <div class="card"><div class="card-header"><h3>Scheduled Reports</h3></div><div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Report</th><th>Frequency</th><th>Next Run</th><th>Recipients</th><th></th></tr></thead>
+        <tbody>
+          <tr><td>Weekly Digest</td><td>Every Monday</td><td>Apr 21, 2026</td><td>jamie.smith@aaa.com</td><td><button class="btn btn-sm btn-outline" onclick="toast('Schedule edited','info')">Edit</button><button class="btn btn-sm btn-ghost" onclick="toast('Schedule paused','warning')">Pause</button></td></tr>
+          <tr><td>Monthly Redemption Summary</td><td>1st of month</td><td>May 1, 2026</td><td>jamie.smith@aaa.com, rachel.kim@aaa.com</td><td><button class="btn btn-sm btn-outline" onclick="toast('Schedule edited','info')">Edit</button><button class="btn btn-sm btn-ghost" onclick="toast('Schedule paused','warning')">Pause</button></td></tr>
+        </tbody></table>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ CONFIGURATIONS ═══════════ -->
+  <div class="page-view" id="page-configurations">
+    <div class="page-header"><div><h1>Configurations</h1><div class="subtitle">Manage verification settings and branding</div></div><button class="btn btn-primary" id="save-config-btn" onclick="saveConfig()">Save Changes</button></div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><h3>Verification Settings</h3></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group"><label class="form-label">Hash Algorithm</label><select class="form-input"><option>SHA-256</option><option>Keccak-256</option></select></div>
+          <div class="form-group"><label class="form-label">Identifier Type</label><select class="form-input"><option>Email Address</option><option>User ID</option><option>Employee ID</option></select></div>
+          <div class="form-group"><label class="form-label">Success Redirect URL</label><input class="form-input" value="https://partner.example.com/welcome" /></div>
+          <div class="form-group"><label class="form-label">Rejection Message</label><input class="form-input" value="This email is not associated with an active membership." /></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Branding</h3></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" value="AAA" /></div>
+          <div class="form-group"><label class="form-label">Primary Color</label><input class="form-input" type="color" value="#2563eb" style="height:42px;padding:4px;" /></div>
+          <div class="form-group"><label class="form-label">Verification Page Headline</label><input class="form-input" value="Verify Your Membership" /></div>
+          <div class="form-group"><label class="form-label">Discount Display Text</label><input class="form-input" value="15% OFF" /></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ INTEGRATIONS ═══════════ -->
+  <div class="page-view" id="page-integrations">
+    <div class="page-header">
+      <div><h1>Integrations</h1><div class="subtitle">Manage retail partners and verification flows</div></div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="toast('Partner marketplace coming soon','info')">Browse Opportunities</button>
+        <button class="btn btn-primary" onclick="openInvitePartnerModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Invite Partner</button>
+      </div>
+    </div>
+    <div class="tabs" id="integ-tabs">
+      <div class="tab active" onclick="switchTab('integ-tabs','integ-tab-content',0,this)">Active Partners</div>
+      <div class="tab" onclick="switchTab('integ-tabs','integ-tab-content',1,this)">Invitations</div>
+      <div class="tab" onclick="switchTab('integ-tabs','integ-tab-content',2,this)">Flow Builder</div>
+      <div class="tab" onclick="switchTab('integ-tabs','integ-tab-content',3,this)">Promo Code Bank</div>
+    </div>
+
+    <!-- Active Partners -->
+    <div class="tab-content active" data-tabgroup="integ-tab-content">
+      <div class="card">
+        <div class="card-body table-wrap" style="padding:0;">
+          <table>
+            <thead><tr><th>Retailer</th><th>Flow Type</th><th>Promo Code</th><th>Redemptions</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr onclick="toast('Walmart integration details','info')"><td><strong>Walmart</strong></td><td>Promo Code + Cookie</td><td><span class="promo-code" onclick="copyCode(event,'WMT-AAA-2026')">WMT-AAA-2026</span></td><td>12,847</td><td><span class="status-pill active">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openEditRulesModal('Walmart')">Edit Rules</button></td></tr>
+              <tr onclick="toast('Proflowers integration details','info')"><td><strong>Proflowers</strong></td><td>Landing Page + Sub ID</td><td><span class="promo-code" onclick="copyCode(event,'PFLW-EMP15')">PFLW-EMP15</span></td><td>3,291</td><td><span class="status-pill active">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openEditRulesModal('Proflowers')">Edit Rules</button></td></tr>
+              <tr onclick="toast('1-800-Flowers integration details','info')"><td><strong>1-800-Flowers</strong></td><td>Promo Code</td><td><span class="promo-code" onclick="copyCode(event,'800F-PERK10')">800F-PERK10</span></td><td>1,847</td><td><span class="status-pill active">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openEditRulesModal('1-800-Flowers')">Edit Rules</button></td></tr>
+              <tr onclick="toast('Chase Wallet integration pending','info')"><td><strong>Chase Wallet</strong></td><td>Tracking Cookie</td><td>—</td><td>—</td><td><span class="status-pill pending">Pending</span></td><td><button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openEditRulesModal('Chase Wallet')">Configure</button></td></tr>
+              <tr onclick="toast('Target integration details','info')"><td><strong>Target</strong></td><td>Promo Code + Cookie</td><td><span class="promo-code" onclick="copyCode(event,'TGT-MBR-26')">TGT-MBR-26</span></td><td>4,102</td><td><span class="status-pill active">Active</span></td><td><button class="btn btn-sm btn-outline" onclick="event.stopPropagation();openEditRulesModal('Target')">Edit Rules</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Invitations -->
+    <div class="tab-content" data-tabgroup="integ-tab-content">
+      <div class="card"><div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Retailer</th><th>Contact</th><th>Sent</th><th>Status</th><th></th></tr></thead>
+        <tbody>
+          <tr><td><strong>Best Buy</strong></td><td>partnerships@bestbuy.com</td><td>Apr 10, 2026</td><td><span class="status-pill pending">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Reminder sent to Best Buy','success')">Resend</button></td></tr>
+          <tr><td><strong>Amazon</strong></td><td>affiliate@amazon.com</td><td>Apr 12, 2026</td><td><span class="status-pill pending">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Reminder sent to Amazon','success')">Resend</button></td></tr>
+          <tr><td><strong>Costco</strong></td><td>partners@costco.com</td><td>Mar 28, 2026</td><td><span class="status-pill inactive">Declined</span></td><td><button class="btn btn-sm btn-ghost" onclick="toast('Invitation archived','info')">Archive</button></td></tr>
+        </tbody></table>
+      </div></div>
+    </div>
+
+    <!-- Flow Builder -->
+    <div class="tab-content" data-tabgroup="integ-tab-content">
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <h3>Flow Builder</h3>
+            <select class="form-input" style="width:160px;padding:6px 10px;" id="flow-partner-select" onchange="toast('Switched to '+this.value+' flow','info')">
+              <option>Walmart</option><option>Proflowers</option><option>Target</option><option>1-800-Flowers</option>
+            </select>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-sm btn-outline" onclick="openLivePreview()">Live Preview</button>
+            <button class="btn btn-sm btn-success" onclick="toast('Flow saved successfully','success')">Save Flow</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="flow-steps" id="flow-container"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promo Code Bank -->
+    <div class="tab-content" data-tabgroup="integ-tab-content">
+      <div class="header-actions" style="margin-bottom:16px;"><button class="btn btn-primary" onclick="openAddPromoModal()">+ Add Promo Code</button></div>
+      <div class="card"><div class="card-body" id="promo-bank-list"></div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ TEAM & SECURITY ═══════════ -->
+  <div class="page-view" id="page-team">
+    <div class="page-header">
+      <div><h1>Team & Security</h1><div class="subtitle">Manage access, roles, and compliance</div></div>
+      <div class="header-actions">
+        <button class="btn btn-outline" onclick="showPage('team', document.querySelector('[data-page=team]'));document.getElementById('audit-section').scrollIntoView({behavior:'smooth'})">View Audit Log</button>
+        <button class="btn btn-primary" onclick="openInviteTeamModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg> Invite Member</button>
+      </div>
+    </div>
+    <div class="compliance-row">
+      <div class="compliance-badge"><div class="compliance-icon pass">&#9989;</div><div class="compliance-info"><div class="title">SOC 2 Type II</div><div class="status">Compliant — Last audit: Mar 2026</div></div></div>
+      <div class="compliance-badge"><div class="compliance-icon pass">&#128274;</div><div class="compliance-info"><div class="title">Data Encryption</div><div class="status">AES-256 at rest, TLS 1.3 in transit</div></div></div>
+      <div class="compliance-badge"><div class="compliance-icon pass">&#128225;</div><div class="compliance-info"><div class="title">Audit Logging</div><div class="status">Full audit trail — 12-month retention</div></div></div>
+    </div>
+    <div class="role-grid">
+      <div class="role-card" onclick="toast('Admin: Full access to all portal settings, billing, team management','info')"><div class="role-name">Admin</div><div class="role-desc">Full access to all settings</div><div class="role-count">2</div></div>
+      <div class="role-card" onclick="toast('Editor: Manage rosters, integrations, promo codes','info')"><div class="role-name">Editor</div><div class="role-desc">Manage rosters & integrations</div><div class="role-count">4</div></div>
+      <div class="role-card" onclick="toast('Viewer: Read-only access to dashboard and reports','info')"><div class="role-name">Viewer</div><div class="role-desc">Read-only dashboard access</div><div class="role-count">8</div></div>
+      <div class="role-card" onclick="toast('Analyst: Reports, data export, verification metrics','info')"><div class="role-name">Analyst</div><div class="role-desc">Reports & data export only</div><div class="role-count">3</div></div>
+    </div>
+    <div class="card" style="margin-bottom:20px;">
+      <div class="card-header"><h3>Team Members</h3></div>
+      <div class="card-body" id="team-list"></div>
+    </div>
+    <div class="card" id="audit-section">
+      <div class="card-header"><h3>Audit Log</h3>
+        <div class="header-actions">
+          <select class="form-input" style="width:140px;padding:6px 10px;" onchange="toast('Filter applied: '+this.value,'info')"><option>All Actions</option><option>Roster Changes</option><option>Integrations</option><option>Team Changes</option><option>Reports</option></select>
+          <button class="btn btn-sm btn-outline" onclick="toast('Audit log exported','success')">Export Log</button>
+        </div>
+      </div>
+      <div class="card-body" id="audit-log-body"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ BILLING ═══════════ -->
+  <div class="page-view" id="page-billing">
+    <div class="page-header"><div><h1>Billing</h1><div class="subtitle">Manage your subscription and payment details</div></div><button class="btn btn-outline" onclick="toast('Billing portal opening...','info')">Manage Payment Method</button></div>
+    <div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
+      <div class="stat-card"><div class="label">Current Plan</div><div class="value" style="font-size:20px;">Enterprise</div><div class="sub">Unlimited members</div></div>
+      <div class="stat-card"><div class="label">Monthly Spend</div><div class="value">$2,450</div><div class="sub">Next billing: May 1, 2026</div></div>
+      <div class="stat-card"><div class="label">API Calls (MTD)</div><div class="value">184,291</div><div class="sub">Included in plan</div></div>
+    </div>
+  </div>
+
+  <!-- ═══════════ HELP & DOCS ═══════════ -->
+  <div class="page-view" id="page-help">
+    <div class="page-header"><div><h1>Help & Documentation</h1><div class="subtitle">Get support and browse our developer docs</div></div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card" style="cursor:pointer;" onclick="openSupportModal()"><div class="card-body" style="text-align:center;padding:40px;"><div style="font-size:36px;margin-bottom:12px;">&#128172;</div><h3 style="margin-bottom:6px;">Contact Support</h3><p style="color:var(--gray-500);font-size:13px;">Get help from our team. Avg response: &lt; 2 hours.</p><button class="btn btn-primary" style="margin-top:16px;">Open Support Ticket</button></div></div>
+      <div class="card" style="cursor:pointer;" onclick="toast('API docs opening in new tab','info')"><div class="card-body" style="text-align:center;padding:40px;"><div style="font-size:36px;margin-bottom:12px;">&#128214;</div><h3 style="margin-bottom:6px;">API Documentation</h3><p style="color:var(--gray-500);font-size:13px;">REST API reference, SDKs, and integration guides.</p><button class="btn btn-outline" style="margin-top:16px;">View Docs</button></div></div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── DATA ───
+const memberData = [
+  { hash:'894f7f57...b53296', status:'active', segment:'All Members', added:'Jan 15, 2026', verified:'Apr 18, 2026' },
+  { hash:'19c5f922...b00003', status:'active', segment:'Premium Tier', added:'Feb 3, 2026', verified:'Apr 17, 2026' },
+  { hash:'72396815...4263d1', status:'active', segment:'All Members', added:'Mar 12, 2026', verified:'Apr 19, 2026' },
+  { hash:'5d9ddb96...3049f3', status:'pending', segment:'New Upload', added:'Apr 14, 2026', verified:'—' },
+  { hash:'15b12e03...6ba2a2', status:'inactive', segment:'All Members', added:'Nov 8, 2025', verified:'Dec 1, 2025' },
+  { hash:'ffc144a7...d3544dc', status:'active', segment:'West Coast', added:'Jan 22, 2026', verified:'Apr 19, 2026' },
+  { hash:'9b2ed773...3049f3', status:'active', segment:'Premium Tier', added:'Mar 5, 2026', verified:'Apr 16, 2026' },
+  { hash:'877e261a...c645b0c', status:'pending', segment:'New Upload', added:'Apr 14, 2026', verified:'—' },
+];
+let selectedRows = new Set();
+
+const teamMembers = [
+  { name:'Jamie Smith', email:'jamie.smith@aaa.com', role:'Admin', color:'var(--blue)', initials:'JS' },
+  { name:'Tom Messick', email:'tom@perkspring.com', role:'Admin', color:'var(--green)', initials:'TM' },
+  { name:'Rachel Kim', email:'rachel.kim@aaa.com', role:'Editor', color:'#8b5cf6', initials:'RK' },
+  { name:'Marcus Johnson', email:'m.johnson@aaa.com', role:'Analyst', color:'#ec4899', initials:'MJ' },
+  { name:'Lisa Park', email:'l.park@aaa.com', role:'Viewer', color:'var(--orange)', initials:'LP' },
+];
+
+const auditEntries = [
+  { time:'Apr 19 09:14 AM', user:'Jamie Smith', action:'Uploaded new roster — 3,412 members added' },
+  { time:'Apr 18 04:22 PM', user:'Tom Messick', action:'Updated Walmart integration — promo code changed' },
+  { time:'Apr 18 02:10 PM', user:'Rachel Kim', action:'Created audience segment "Premium Tier"' },
+  { time:'Apr 17 11:05 AM', user:'Jamie Smith', action:'Approved Chase Wallet integration request' },
+  { time:'Apr 16 09:30 AM', user:'Marcus Johnson', action:'Exported Q1 Verification Summary report' },
+  { time:'Apr 15 03:45 PM', user:'Tom Messick', action:'Added Proflowers promo code PFLW-EMP15' },
+  { time:'Apr 14 10:00 AM', user:'Jamie Smith', action:'Invited Lisa Park as Viewer' },
+];
+
+const promoCodes = [
+  { abbr:'WMT', name:'Walmart', offer:'15% off sitewide for members', code:'WMT-AAA-2026', expiry:'Jun 30, 2026' },
+  { abbr:'PFW', name:'Proflowers', offer:'15% off + free delivery', code:'PFLW-EMP15', expiry:'Apr 22, 2026' },
+  { abbr:'TGT', name:'Target', offer:'10% off home & electronics', code:'TGT-MBR-26', expiry:'Dec 31, 2026' },
+  { abbr:'800F', name:'1-800-Flowers', offer:'10% off arrangements', code:'800F-PERK10', expiry:'Sep 15, 2026' },
+];
+
+let flowSteps = [
+  { icon:'\u26A1', label:'Email Verified', type:'trigger' },
+  { icon:'\uD83C\uDFF7', label:'Apply Promo Code', type:'action' },
+  { icon:'\uD83C\uDF6A', label:'Set Tracking Cookie', type:'action' },
+  { icon:'\uD83D\uDD17', label:'Add Sub ID', type:'action' },
+  { icon:'\uD83D\uDE80', label:'Redirect to Store', type:'' },
+];
+
+const searchIndex = [
+  { label:'Walmart Integration', type:'Integration', page:'integrations' },
+  { label:'Proflowers Integration', type:'Integration', page:'integrations' },
+  { label:'Target Integration', type:'Integration', page:'integrations' },
+  { label:'Chase Wallet Integration', type:'Integration', page:'integrations' },
+  { label:'Q1 Verification Summary', type:'Report', page:'reports' },
+  { label:'Member Growth Analysis', type:'Report', page:'reports' },
+  { label:'Weekly Digest', type:'Report', page:'reports' },
+  { label:'Premium Tier Segment', type:'Segment', page:'members' },
+  { label:'Jamie Smith', type:'Team', page:'team' },
+  { label:'Tom Messick', type:'Team', page:'team' },
+  { label:'Upload Roster', type:'Action', page:'members' },
+  { label:'Promo Code Bank', type:'Integration', page:'integrations' },
+  { label:'Audit Log', type:'Security', page:'team' },
+  { label:'SOC 2 Compliance', type:'Security', page:'team' },
+  { label:'API Documentation', type:'Help', page:'help' },
+];
+
+// ─── TOAST ───
+function toast(msg, type='info') {
+  const c = document.getElementById('toast-container');
+  const icons = { info:'&#9432;', success:'&#10003;', error:'&#10007;', warning:'&#9888;' };
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>${msg}`;
+  t.onclick = () => { t.classList.add('exiting'); setTimeout(()=>t.remove(),300); };
+  c.appendChild(t);
+  setTimeout(() => { if(t.parentNode) { t.classList.add('exiting'); setTimeout(()=>t.remove(),300); } }, 3500);
+}
+
+// ─── NAV ───
+function showPage(pageId, navEl) {
+  document.querySelectorAll('.page-view').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+  if(navEl) navEl.classList.add('active');
+  if(pageId==='dashboard') animateCounters();
+}
+
+// ─── TABS ───
+function switchTab(tabsId, groupName, index, tabEl) {
+  document.querySelectorAll(`#${tabsId} .tab`).forEach(t=>t.classList.remove('active'));
+  tabEl.classList.add('active');
+  const contents = document.querySelectorAll(`[data-tabgroup="${groupName}"]`);
+  contents.forEach((c,i) => { c.classList.remove('active'); if(i===index) c.classList.add('active'); });
+}
+
+// ─── ANIMATED COUNTERS ───
+function animateCounters() {
+  document.querySelectorAll('[data-count]').forEach(el => {
+    const target = parseFloat(el.dataset.count);
+    const suffix = el.dataset.suffix || '';
+    const decimal = parseInt(el.dataset.decimal) || 0;
+    let current = 0;
+    const step = target / 40;
+    const interval = setInterval(() => {
+      current += step;
+      if(current >= target) { current = target; clearInterval(interval); }
+      const display = decimal > 0 ? current.toFixed(decimal) : Math.floor(current).toLocaleString();
+      el.textContent = display + suffix;
+    }, 25);
+  });
+}
+
+// ─── CHART ───
+function buildChart() {
+  const chart = document.getElementById('chart');
+  chart.innerHTML = '';
+  const months = ['Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr'];
+  const vData = [120,180,240,380,420,610,780,980,1200];
+  const rData = [40,55,80,120,160,210,290,380,520];
+  months.forEach((m,i) => {
+    const g = document.createElement('div');
+    g.className = 'chart-bar-group';
+    g.innerHTML = `<div class="chart-tooltip">Verify: ${vData[i]} &bull; Redeem: ${rData[i]}</div><div class="chart-bars"><div class="chart-bar verify" style="height:0px;" data-h="${vData[i]/6}"></div><div class="chart-bar redeem" style="height:0px;" data-h="${rData[i]/6}"></div></div><div class="chart-label">${m}</div>`;
+    chart.appendChild(g);
+  });
+  setTimeout(()=>{
+    chart.querySelectorAll('.chart-bar').forEach(b=>{
+      b.style.height = b.dataset.h + 'px';
+    });
+  }, 100);
+}
+
+// ─── MEMBER TABLE ───
+function renderMembers(data) {
+  const tbody = document.getElementById('member-table-body');
+  tbody.innerHTML = data.map((m,i) => `
+    <tr class="${selectedRows.has(i)?'selected':''}" oncontextmenu="showContextMenu(event,${i})">
+      <td><div class="checkbox ${selectedRows.has(i)?'checked':''}" onclick="toggleRow(${i})"></div></td>
+      <td style="font-family:monospace;font-size:12px;">${m.hash}</td>
+      <td><span class="status-pill ${m.status}">${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span></td>
+      <td>${m.segment}</td>
+      <td>${m.added}</td>
+      <td>${m.verified}</td>
+      <td><button class="btn btn-sm btn-outline" onclick="openMemberDetail(${i})">View</button></td>
+    </tr>
+  `).join('');
+}
+
+function toggleRow(i) {
+  if(selectedRows.has(i)) selectedRows.delete(i); else selectedRows.add(i);
+  renderMembers(currentFilteredMembers || memberData);
+  updateBulkBar();
+}
+
+function toggleSelectAll() {
+  const cb = document.getElementById('select-all-cb');
+  const data = currentFilteredMembers || memberData;
+  if(selectedRows.size === data.length) { selectedRows.clear(); cb.classList.remove('checked'); }
+  else { data.forEach((_,i)=>selectedRows.add(i)); cb.classList.add('checked'); }
+  renderMembers(data);
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = document.getElementById('bulk-bar');
+  const count = document.getElementById('bulk-count');
+  if(selectedRows.size > 0) { bar.classList.add('visible'); count.textContent = selectedRows.size + ' selected'; }
+  else { bar.classList.remove('visible'); }
+}
+
+function clearBulk() { selectedRows.clear(); document.getElementById('select-all-cb').classList.remove('checked'); renderMembers(currentFilteredMembers||memberData); updateBulkBar(); }
+
+let currentFilteredMembers = null;
+function filterMembers() {
+  const q = document.getElementById('member-search').value.toLowerCase();
+  document.getElementById('member-search-clear').classList.toggle('visible', q.length>0);
+  selectedRows.clear(); updateBulkBar();
+  currentFilteredMembers = q ? memberData.filter(m=>m.hash.toLowerCase().includes(q)) : memberData;
+  renderMembers(currentFilteredMembers);
+}
+
+function filterByStatus(status, chip) {
+  document.querySelectorAll('.filter-chips .chip').forEach(c=>c.classList.remove('active'));
+  chip.classList.add('active');
+  selectedRows.clear(); updateBulkBar();
+  currentFilteredMembers = status==='all' ? memberData : memberData.filter(m=>m.status===status);
+  renderMembers(currentFilteredMembers);
+}
+
+// ─── CONTEXT MENU ───
+let contextTarget = null;
+function showContextMenu(e, i) {
+  e.preventDefault();
+  contextTarget = i;
+  const menu = document.getElementById('context-menu');
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+  menu.classList.add('visible');
+}
+function contextAction(action) {
+  document.getElementById('context-menu').classList.remove('visible');
+  if(action==='view') openMemberDetail(contextTarget);
+  else if(action==='delete') { toast('Member removed','error'); memberData.splice(contextTarget,1); renderMembers(memberData); }
+  else if(action==='export') toast('Member data exported','success');
+  else if(action==='edit') toast('Edit mode coming soon','info');
+}
+document.addEventListener('click', ()=>document.getElementById('context-menu').classList.remove('visible'));
+
+// ─── UPLOAD SIMULATION ───
+function simulateUpload() {
+  const zone = document.getElementById('upload-zone');
+  const area = document.getElementById('upload-progress-area');
+  const bar = document.getElementById('upload-progress');
+  const status = document.getElementById('upload-status');
+  const mode = document.getElementById('upload-mode').value;
+  zone.style.display = 'none';
+  area.style.display = 'block';
+  bar.style.width = '0%';
+  bar.classList.remove('success');
+  status.textContent = 'Reading CSV file...';
+  let progress = 0;
+  const steps = [
+    { at:15, msg:'Parsing 4,218 email addresses...' },
+    { at:35, msg:'Normalizing to lowercase...' },
+    { at:55, msg:'Generating SHA-256 hashes...' },
+    { at:75, msg:'Deduplicating against existing roster...' },
+    { at:90, msg:mode.includes('Supersede') ? 'Superseding existing roster...' : 'Merging with existing roster...' },
+    { at:100, msg:'Complete! 4,218 members processed.' },
+  ];
+  const interval = setInterval(()=>{
+    progress += 2;
+    bar.style.width = progress+'%';
+    const step = steps.find(s=>s.at<=progress && s.at>progress-3);
+    if(step) status.textContent = step.msg;
+    if(progress >= 100) {
+      clearInterval(interval);
+      bar.classList.add('success');
+      toast('Roster uploaded: 4,218 members processed','success');
+      setTimeout(()=>{
+        zone.style.display = '';
+        area.style.display = 'none';
+      }, 3000);
+    }
+  }, 60);
+}
+
+// ─── FLOW BUILDER ───
+function renderFlow() {
+  const container = document.getElementById('flow-container');
+  container.innerHTML = '';
+  flowSteps.forEach((s,i) => {
+    if(i>0) container.innerHTML += '<div class="flow-arrow">&#8594;</div>';
+    const typeClass = s.type==='trigger' ? 'trigger' : s.type==='action' ? 'action' : '';
+    const removable = i>0 && i<flowSteps.length-1;
+    container.innerHTML += `<div class="flow-step"><div class="flow-node ${typeClass}" onclick="editFlowStep(${i})">${removable?`<button class="remove-node" onclick="event.stopPropagation();removeFlowStep(${i})">&#215;</button>`:''}<div class="node-icon">${s.icon}</div>${s.label}</div></div>`;
+  });
+  container.innerHTML += `<div class="flow-arrow">+</div><div class="add-step-btn" onclick="addFlowStep()">+</div>`;
+}
+
+function addFlowStep() {
+  openModal('Add Flow Step', `
+    <div class="form-group"><label class="form-label">Step Type</label><select class="form-input" id="new-step-type"><option value="action">Action</option></select></div>
+    <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="new-step-label" placeholder="e.g., Send Email" /></div>
+  `, () => {
+    const label = document.getElementById('new-step-label').value || 'New Step';
+    flowSteps.splice(flowSteps.length-1, 0, { icon:'\u2699', label, type:'action' });
+    renderFlow();
+    toast('Step added to flow','success');
+    closeModal();
+  });
+}
+
+function removeFlowStep(i) {
+  flowSteps.splice(i, 1);
+  renderFlow();
+  toast('Step removed','info');
+}
+
+function editFlowStep(i) {
+  const step = flowSteps[i];
+  openModal('Edit Step', `
+    <div class="form-group"><label class="form-label">Label</label><input class="form-input" id="edit-step-label" value="${step.label}" /></div>
+  `, () => {
+    flowSteps[i].label = document.getElementById('edit-step-label').value || step.label;
+    renderFlow();
+    toast('Step updated','success');
+    closeModal();
+  });
+}
+
+// ─── PROMO BANK ───
+function renderPromos() {
+  const list = document.getElementById('promo-bank-list');
+  list.innerHTML = promoCodes.map(p => `
+    <div class="promo-card">
+      <div class="promo-logo">${p.abbr}</div>
+      <div class="promo-info"><div class="name">${p.name}</div><div class="offer">${p.offer}</div></div>
+      <div class="promo-code" onclick="copyCode(event,'${p.code}')">${p.code}</div>
+      <div class="promo-expiry">Exp: ${p.expiry}</div>
+    </div>
+  `).join('');
+}
+
+function copyCode(e, code) {
+  e.stopPropagation();
+  navigator.clipboard.writeText(code).catch(()=>{});
+  const el = e.target;
+  el.classList.add('copied');
+  toast(`Copied: ${code}`, 'success');
+  setTimeout(()=>el.classList.remove('copied'), 1500);
+}
+
+// ─── TEAM ───
+function renderTeam() {
+  const list = document.getElementById('team-list');
+  list.innerHTML = teamMembers.map((m,i) => `
+    <div class="member-row">
+      <div class="member-avatar" style="background:${m.color};">${m.initials}</div>
+      <div class="member-info"><div class="name">${m.name}</div><div class="email">${m.email}</div></div>
+      <div class="member-role">${m.role}</div>
+      <div class="member-actions">
+        <button class="btn btn-sm btn-ghost" onclick="openEditRoleModal(${i})">Edit</button>
+        <button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="confirmRemoveTeamMember(${i})">Remove</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAuditLog() {
+  const body = document.getElementById('audit-log-body');
+  body.innerHTML = auditEntries.map(e => `
+    <div class="log-entry"><div class="log-time">${e.time}</div><div class="log-user">${e.user}</div><div class="log-action">${e.action}</div></div>
+  `).join('');
+}
+
+// ─── SEARCH ───
+document.getElementById('global-search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const results = document.getElementById('search-results');
+  if(q.length < 2) { results.classList.remove('visible'); return; }
+  const matches = searchIndex.filter(s => s.label.toLowerCase().includes(q));
+  if(matches.length === 0) {
+    results.innerHTML = '<div class="search-result-item"><span class="sr-label" style="color:var(--sidebar-text);">No results found</span></div>';
+  } else {
+    results.innerHTML = matches.slice(0,6).map(m => `<div class="search-result-item" onclick="navigateSearch('${m.page}','${m.label}')"><span class="sr-type">${m.type}</span><span class="sr-label">${m.label}</span></div>`).join('');
+  }
+  results.classList.add('visible');
+});
+document.getElementById('global-search').addEventListener('blur', ()=>setTimeout(()=>document.getElementById('search-results').classList.remove('visible'),200));
+
+function navigateSearch(page, label) {
+  showPage(page, document.querySelector(`[data-page=${page}]`));
+  document.getElementById('global-search').value = '';
+  document.getElementById('search-results').classList.remove('visible');
+  toast(`Navigated to ${label}`, 'info');
+}
+
+// ─── NOTIFICATIONS ───
+function toggleNotifications() {
+  const dd = document.getElementById('notif-dropdown');
+  dd.classList.toggle('visible');
+}
+function markAllRead(e) {
+  e.stopPropagation();
+  document.querySelectorAll('.notif-item.unread').forEach(n=>n.classList.remove('unread'));
+  document.getElementById('notif-dot').style.display = 'none';
+  toast('All notifications marked as read','success');
+}
+document.addEventListener('click', (e) => { if(!e.target.closest('#notif-bell')) document.getElementById('notif-dropdown').classList.remove('visible'); });
+
+// ─── MODALS ───
+function openModal(title, bodyHtml, onConfirm, opts={}) {
+  const m = document.getElementById('modal-container');
+  m.className = `modal ${opts.large?'modal-lg':''}`;
+  m.innerHTML = `
+    <div class="modal-header"><h2>${title}</h2><button class="modal-close" onclick="closeModal()">&#215;</button></div>
+    <div class="modal-body">${bodyHtml}</div>
+    ${onConfirm ? `<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="modal-confirm">${opts.confirmText||'Confirm'}</button></div>` : `<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Close</button></div>`}
+  `;
+  if(onConfirm) document.getElementById('modal-confirm').onclick = onConfirm;
+  document.getElementById('modal-overlay').classList.add('visible');
+}
+function closeModal() { document.getElementById('modal-overlay').classList.remove('visible'); }
+
+function openMemberDetail(i) {
+  const m = (currentFilteredMembers||memberData)[i];
+  openModal('Member Details', `
+    <div style="font-family:monospace;font-size:13px;background:var(--gray-100);padding:12px;border-radius:8px;word-break:break-all;margin-bottom:16px;">${m.hash}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><span class="form-label">Status</span><p><span class="status-pill ${m.status}">${m.status.charAt(0).toUpperCase()+m.status.slice(1)}</span></p></div>
+      <div><span class="form-label">Segment</span><p>${m.segment}</p></div>
+      <div><span class="form-label">Added</span><p>${m.added}</p></div>
+      <div><span class="form-label">Last Verified</span><p>${m.verified}</p></div>
+    </div>
+  `);
+}
+
+function openApiSyncModal() {
+  openModal('API Sync Configuration', `
+    <div class="form-group"><label class="form-label">API Endpoint</label><input class="form-input" value="https://api.partner.com/members" /></div>
+    <div class="form-group"><label class="form-label">API Key</label><input class="form-input" type="password" value="sk-xxxxxxxxxxxx" /></div>
+    <div class="form-group"><label class="form-label">Sync Frequency</label><select class="form-input"><option>Every 24 hours</option><option>Every 12 hours</option><option>Every hour</option><option>Real-time (webhook)</option></select></div>
+    <div class="form-group"><label class="form-label">Last Sync</label><p style="font-size:13px;color:var(--gray-500);">Apr 19, 2026 at 6:00 AM — 1,247,893 members</p></div>
+  `, () => { toast('API sync configuration saved','success'); closeModal(); }, { confirmText:'Save & Sync Now' });
+}
+
+function openSegmentModal() {
+  openModal('Create Audience Segment', `
+    <div class="form-group"><label class="form-label">Segment Name</label><input class="form-input" placeholder="e.g., West Coast Premium" /></div>
+    <div class="form-group"><label class="form-label">Filter By</label><select class="form-input"><option>Date Added</option><option>Last Verified</option><option>Status</option><option>Hash Prefix</option></select></div>
+    <div class="form-group"><label class="form-label">Condition</label><div style="display:flex;gap:8px;"><select class="form-input" style="width:140px;"><option>After</option><option>Before</option><option>Between</option><option>Equals</option></select><input class="form-input" placeholder="Value..." /></div></div>
+  `, () => { toast('Segment created successfully','success'); closeModal(); }, { confirmText:'Create Segment' });
+}
+
+function confirmBulkDelete() {
+  openModal('Confirm Deletion', `<p style="font-size:14px;">Are you sure you want to delete <strong>${selectedRows.size} members</strong>? This action cannot be undone.</p>`, () => {
+    toast(`${selectedRows.size} members deleted`,'error');
+    const indices = Array.from(selectedRows).sort((a,b)=>b-a);
+    indices.forEach(i=>memberData.splice(i,1));
+    clearBulk();
+    closeModal();
+  }, { confirmText:'Delete Members' });
+}
+
+function openReportBuilder() {
+  showPage('reports', document.querySelector('[data-page=reports]'));
+  openModal('Custom Report Builder', `
+    <div class="form-group"><label class="form-label">Report Name</label><input class="form-input" placeholder="e.g., April Verification Summary" /></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Report Type</label><select class="form-input"><option>Verifications</option><option>Redemptions</option><option>Members</option><option>Summary</option></select></div>
+      <div class="form-group"><label class="form-label">Date Range</label><select class="form-input"><option>Last 7 days</option><option>Last 30 days</option><option>Last 90 days</option><option>Custom</option></select></div>
+      <div class="form-group"><label class="form-label">Group By</label><select class="form-input"><option>Day</option><option>Week</option><option>Month</option><option>Retailer</option></select></div>
+      <div class="form-group"><label class="form-label">Format</label><select class="form-input"><option>PDF</option><option>CSV</option><option>Excel</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Include Segments</label><div class="filter-chips"><div class="chip active" onclick="this.classList.toggle('active')">All Members</div><div class="chip" onclick="this.classList.toggle('active')">Premium Tier</div><div class="chip" onclick="this.classList.toggle('active')">West Coast</div><div class="chip" onclick="this.classList.toggle('active')">New Upload</div></div></div>
+  `, () => { toast('Report generating... You\u2019ll be notified when ready.','success'); closeModal(); }, { confirmText:'Generate Report', large:true });
+}
+
+function openScheduleReportModal() {
+  openModal('Schedule Report', `
+    <div class="form-group"><label class="form-label">Report</label><select class="form-input"><option>Verification Summary</option><option>Redemption Report</option><option>Member Growth</option><option>Custom</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Frequency</label><select class="form-input"><option>Daily</option><option>Weekly (Monday)</option><option>Monthly (1st)</option><option>Quarterly</option></select></div>
+      <div class="form-group"><label class="form-label">Format</label><select class="form-input"><option>PDF</option><option>CSV</option><option>Excel</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Send To (emails)</label><input class="form-input" value="jamie.smith@aaa.com" /></div>
+  `, () => { toast('Report scheduled','success'); closeModal(); }, { confirmText:'Schedule' });
+}
+
+function openInvitePartnerModal() {
+  openModal('Invite Retail Partner', `
+    <div class="form-group"><label class="form-label">Retailer Name</label><input class="form-input" placeholder="e.g., Best Buy" /></div>
+    <div class="form-group"><label class="form-label">Contact Email</label><input class="form-input" placeholder="partnerships@retailer.com" /></div>
+    <div class="form-group"><label class="form-label">Message (optional)</label><textarea class="form-input" placeholder="We'd love to offer your products as a member perk..."></textarea></div>
+  `, () => { toast('Partner invitation sent!','success'); closeModal(); }, { confirmText:'Send Invitation' });
+}
+
+function openEditRulesModal(name) {
+  openModal(`Edit Rules — ${name}`, `
+    <div class="form-group"><label class="form-label">Flow Type</label><select class="form-input"><option>Promo Code + Tracking Cookie</option><option>Promo Code Only</option><option>Landing Page + Sub ID</option><option>Tracking Cookie Only</option></select></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Promo Code</label><input class="form-input" value="WMT-AAA-2026" /></div>
+      <div class="form-group"><label class="form-label">Expiration</label><input class="form-input" type="date" value="2026-06-30" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Landing Page URL</label><input class="form-input" placeholder="https://retailer.com/special-offer" /></div>
+    <div class="form-group"><label class="form-label">Sub ID Template</label><input class="form-input" value="perkspring-{member_hash}" /></div>
+  `, () => { toast(`${name} rules updated`,'success'); closeModal(); }, { confirmText:'Save Rules' });
+}
+
+function openAddPromoModal() {
+  openModal('Add Promo Code', `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Retailer Name</label><input class="form-input" id="new-promo-name" placeholder="e.g., Nike" /></div>
+      <div class="form-group"><label class="form-label">Abbreviation</label><input class="form-input" id="new-promo-abbr" placeholder="e.g., NKE" maxlength="4" style="text-transform:uppercase;" /></div>
+    </div>
+    <div class="form-group"><label class="form-label">Offer Description</label><input class="form-input" id="new-promo-offer" placeholder="e.g., 20% off sitewide" /></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div class="form-group"><label class="form-label">Coupon Code</label><input class="form-input" id="new-promo-code" placeholder="e.g., NKE-PERK20" /></div>
+      <div class="form-group"><label class="form-label">Expiration Date</label><input class="form-input" id="new-promo-exp" type="date" /></div>
+    </div>
+  `, () => {
+    const name = document.getElementById('new-promo-name').value || 'New Retailer';
+    promoCodes.push({ abbr: (document.getElementById('new-promo-abbr').value||'NEW').toUpperCase(), name, offer: document.getElementById('new-promo-offer').value||'Discount', code: document.getElementById('new-promo-code').value||'CODE', expiry: document.getElementById('new-promo-exp').value||'Dec 31, 2026' });
+    renderPromos();
+    toast(`Promo code added for ${name}`,'success');
+    closeModal();
+  }, { confirmText:'Add Code' });
+}
+
+function openInviteTeamModal() {
+  openModal('Invite Team Member', `
+    <div class="form-group"><label class="form-label">Full Name</label><input class="form-input" id="invite-name" placeholder="Jane Doe" /></div>
+    <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="invite-email" placeholder="jane.doe@company.com" /></div>
+    <div class="form-group"><label class="form-label">Role</label><select class="form-input" id="invite-role"><option>Admin</option><option>Editor</option><option>Viewer</option><option>Analyst</option></select></div>
+  `, () => {
+    const name = document.getElementById('invite-name').value || 'New Member';
+    const email = document.getElementById('invite-email').value || 'user@company.com';
+    const role = document.getElementById('invite-role').value;
+    const colors = ['#6366f1','#ec4899','#14b8a6','#f59e0b','#8b5cf6'];
+    const initials = name.split(' ').map(n=>n[0]).join('').toUpperCase().slice(0,2);
+    teamMembers.push({ name, email, role, color: colors[teamMembers.length % colors.length], initials });
+    renderTeam();
+    auditEntries.unshift({ time:'Just now', user:'Jamie Smith', action:`Invited ${name} as ${role}` });
+    renderAuditLog();
+    toast(`Invitation sent to ${name}`,'success');
+    closeModal();
+  }, { confirmText:'Send Invite' });
+}
+
+function openEditRoleModal(i) {
+  const m = teamMembers[i];
+  openModal(`Edit Role — ${m.name}`, `
+    <div class="form-group"><label class="form-label">Current Role</label><p style="font-size:14px;font-weight:600;">${m.role}</p></div>
+    <div class="form-group"><label class="form-label">New Role</label><select class="form-input" id="edit-role"><option ${m.role==='Admin'?'selected':''}>Admin</option><option ${m.role==='Editor'?'selected':''}>Editor</option><option ${m.role==='Viewer'?'selected':''}>Viewer</option><option ${m.role==='Analyst'?'selected':''}>Analyst</option></select></div>
+  `, () => {
+    teamMembers[i].role = document.getElementById('edit-role').value;
+    renderTeam();
+    toast(`${m.name} role updated to ${teamMembers[i].role}`,'success');
+    closeModal();
+  }, { confirmText:'Update Role' });
+}
+
+function confirmRemoveTeamMember(i) {
+  const m = teamMembers[i];
+  openModal('Remove Team Member', `<p style="font-size:14px;">Remove <strong>${m.name}</strong> (${m.email}) from the team? They will lose all portal access.</p>`, () => {
+    teamMembers.splice(i, 1);
+    renderTeam();
+    toast(`${m.name} removed from team`,'error');
+    closeModal();
+  }, { confirmText:'Remove' });
+}
+
+function openSupportModal() {
+  openModal('Open Support Ticket', `
+    <div class="form-group"><label class="form-label">Subject</label><input class="form-input" placeholder="Briefly describe your issue..." /></div>
+    <div class="form-group"><label class="form-label">Category</label><select class="form-input"><option>Integration Issue</option><option>Roster Upload</option><option>Billing</option><option>Bug Report</option><option>Feature Request</option><option>Other</option></select></div>
+    <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" rows="4" placeholder="Provide details..."></textarea></div>
+    <div class="form-group"><label class="form-label">Priority</label><select class="form-input"><option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option></select></div>
+  `, () => { toast('Support ticket submitted — expect a response within 2 hours','success'); closeModal(); }, { confirmText:'Submit Ticket' });
+}
+
+function openLivePreview() {
+  openModal('Live Verification Preview', `<iframe src="index.html" class="preview-frame"></iframe>`, null, { large:true });
+}
+
+function saveConfig() {
+  const btn = document.getElementById('save-config-btn');
+  btn.disabled = true; btn.textContent = 'Saving...';
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'Save Changes'; toast('Configuration saved successfully','success'); }, 1000);
+}
+
+// ─── KEYBOARD SHORTCUTS ───
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeModal();
+  if(e.key === '/' && !e.target.closest('input,textarea,select')) { e.preventDefault(); document.getElementById('global-search').focus(); }
+});
+
+// ─── INIT ───
+buildChart();
+renderMembers(memberData);
+renderFlow();
+renderPromos();
+renderTeam();
+renderAuditLog();
+animateCounters();
+</script>
+</body>
+</html>
