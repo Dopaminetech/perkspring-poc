@@ -657,7 +657,7 @@
 
   <!-- ═══════════ CONFIGURATIONS ═══════════ -->
   <div class="page-view" id="page-configurations">
-    <div class="page-header"><div><h1>Configurations</h1><div class="subtitle">Manage verification settings and branding</div></div><button class="btn btn-primary" id="save-config-btn" onclick="saveConfig()">Save Changes</button></div>
+    <div class="page-header"><div><h1>Configurations</h1><div class="subtitle">Manage verification settings and branding</div></div><div class="header-actions"><button class="btn btn-outline" onclick="window.open('benchmark.html','_blank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px;"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Hashing Benchmark</button><button class="btn btn-primary" id="save-config-btn" onclick="saveConfig()">Save Changes</button></div></div>
     <div class="card" style="margin-bottom:20px;">
       <div class="card-header"><h3>Verification Settings</h3></div>
       <div class="card-body">
@@ -875,6 +875,7 @@ const searchIndex = [
   { label:'Audit Log', type:'Security', page:'team' },
   { label:'SOC 2 Compliance', type:'Security', page:'team' },
   { label:'API Documentation', type:'Help', page:'help' },
+  { label:'Hashing Benchmark', type:'Tool', page:'benchmark' },
 ];
 
 // ─── TOAST ───
@@ -1162,7 +1163,8 @@ document.getElementById('global-search').addEventListener('input', function() {
 document.getElementById('global-search').addEventListener('blur', ()=>setTimeout(()=>document.getElementById('search-results').classList.remove('visible'),200));
 
 function navigateSearch(page, label) {
-  showPage(page, document.querySelector(`[data-page=${page}]`));
+  if(page === 'benchmark') { window.open('benchmark.html','_blank'); }
+  else { showPage(page, document.querySelector(`[data-page=${page}]`)); }
   document.getElementById('global-search').value = '';
   document.getElementById('search-results').classList.remove('visible');
   toast(`Navigated to ${label}`, 'info');

@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PerkSpring — Hashing Benchmark</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #0f2b5b;
+      --blue: #2563eb;
+      --blue-light: #dbeafe;
+      --green: #16a34a;
+      --green-light: #dcfce7;
+      --gray-100: #f8fafc;
+      --gray-200: #e2e8f0;
+      --gray-500: #64748b;
+      --gray-700: #334155;
+      --gray-900: #0f172a;
+      --radius: 10px;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: var(--gray-900); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 20px; }
+
+    .header { text-align: center; margin-bottom: 32px; }
+    .header h1 { font-size: 24px; font-weight: 700; color: var(--navy); }
+    .header p { color: var(--gray-500); font-size: 14px; margin-top: 4px; }
+
+    .card { background: white; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid var(--gray-200); max-width: 720px; width: 100%; margin-bottom: 20px; }
+    .card-header { padding: 16px 24px; border-bottom: 1px solid var(--gray-200); font-weight: 600; font-size: 14px; display: flex; align-items: center; justify-content: space-between; }
+    .card-body { padding: 24px; }
+
+    .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .preset-btn { padding: 14px; border: 2px solid var(--gray-200); border-radius: var(--radius); background: white; cursor: pointer; text-align: center; transition: all 0.15s; }
+    .preset-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+    .preset-btn.active { border-color: var(--blue); background: var(--blue-light); }
+    .preset-btn .count { font-size: 20px; font-weight: 800; color: var(--navy); }
+    .preset-btn .label { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+
+    .custom-row { display: flex; gap: 12px; align-items: flex-end; margin-bottom: 20px; }
+    .custom-row label { flex: 1; }
+    .custom-row .form-label { font-size: 12px; font-weight: 600; color: var(--gray-700); margin-bottom: 6px; display: block; }
+    .custom-row input { width: 100%; padding: 9px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 14px; outline: none; }
+    .custom-row input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--blue); color: white; width: 100%; }
+    .btn-primary:hover { background: #1d4ed8; }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-sm { padding: 8px 14px; font-size: 12px; }
+
+    .progress-bar { height: 10px; background: var(--gray-200); border-radius: 5px; overflow: hidden; margin: 16px 0 8px; }
+    .progress-fill { height: 100%; background: var(--blue); border-radius: 5px; transition: width 0.15s; width: 0%; }
+    .progress-fill.done { background: var(--green); }
+    .progress-text { font-size: 13px; color: var(--gray-500); text-align: center; }
+
+    .results { display: none; }
+    .results.visible { display: block; animation: fadeUp 0.3s ease-out; }
+
+    .result-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 16px; }
+    .result-stat { padding: 16px; background: var(--gray-100); border-radius: 8px; text-align: center; }
+    .result-stat .val { font-size: 24px; font-weight: 800; color: var(--navy); }
+    .result-stat .lbl { font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+    .result-stat.highlight { background: var(--green-light); }
+    .result-stat.highlight .val { color: var(--green); }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { text-align: left; padding: 8px 12px; border-bottom: 2px solid var(--gray-200); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-500); }
+    td { padding: 8px 12px; border-bottom: 1px solid var(--gray-200); }
+    tr:last-child td { border-bottom: none; }
+
+    .history-row { display: flex; align-items: center; gap: 8px; }
+    .history-bar { height: 20px; background: var(--blue); border-radius: 3px; transition: width 0.5s ease-out; min-width: 4px; }
+    .history-label { font-size: 12px; color: var(--gray-500); min-width: 60px; }
+    .history-value { font-size: 12px; font-weight: 600; color: var(--navy); min-width: 80px; text-align: right; }
+
+    .note { font-size: 12px; color: var(--gray-500); background: var(--gray-100); padding: 12px 16px; border-radius: 8px; margin-top: 16px; line-height: 1.5; }
+
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.6s linear infinite; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <h1>Client-Side Hashing Benchmark</h1>
+    <p>Measures SHA-256 hashing performance in your browser using the Web Crypto API</p>
+  </div>
+
+  <!-- Run Benchmark -->
+  <div class="card">
+    <div class="card-header">Select Roster Size</div>
+    <div class="card-body">
+      <div class="preset-grid">
+        <div class="preset-btn active" onclick="selectPreset(10000, this)"><div class="count">10K</div><div class="label">Small org</div></div>
+        <div class="preset-btn" onclick="selectPreset(100000, this)"><div class="count">100K</div><div class="label">Mid-size</div></div>
+        <div class="preset-btn" onclick="selectPreset(500000, this)"><div class="count">500K</div><div class="label">Large</div></div>
+        <div class="preset-btn" onclick="selectPreset(1000000, this)"><div class="count">1M</div><div class="label">Enterprise</div></div>
+        <div class="preset-btn" onclick="selectPreset(2000000, this)"><div class="count">2M</div><div class="label">Enterprise+</div></div>
+        <div class="preset-btn" onclick="selectPreset(0, this)"><div class="count">Custom</div><div class="label">Enter below</div></div>
+      </div>
+
+      <div class="custom-row" id="custom-row" style="display:none;">
+        <label>
+          <span class="form-label">Number of emails</span>
+          <input type="number" id="custom-count" value="250000" min="1000" max="10000000" step="1000" />
+        </label>
+      </div>
+
+      <div class="custom-row">
+        <label>
+          <span class="form-label">Processing mode</span>
+          <select id="mode-select" style="width:100%;padding:9px 12px;border:1px solid var(--gray-200);border-radius:8px;font-size:14px;">
+            <option value="chunked">Chunked (50K batches) — Recommended</option>
+            <option value="single">Single batch — Simpler, may freeze UI on large sets</option>
+          </select>
+        </label>
+      </div>
+
+      <button class="btn btn-primary" id="run-btn" onclick="runBenchmark()">Run Benchmark</button>
+
+      <div id="progress-area" style="display:none;">
+        <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">Generating test emails...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div class="card results" id="results-card">
+    <div class="card-header">Results <button class="btn btn-sm" style="background:var(--gray-100);color:var(--gray-700);" onclick="clearHistory()">Clear History</button></div>
+    <div class="card-body">
+      <div class="result-grid">
+        <div class="result-stat"><div class="val" id="res-count">—</div><div class="lbl">Emails Hashed</div></div>
+        <div class="result-stat highlight"><div class="val" id="res-time">—</div><div class="lbl">Total Time</div></div>
+        <div class="result-stat"><div class="val" id="res-rate">—</div><div class="lbl">Hashes / Second</div></div>
+        <div class="result-stat"><div class="val" id="res-mem">—</div><div class="lbl">Est. Memory (Hashes)</div></div>
+      </div>
+
+      <div class="note" id="res-verdict"></div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="card results" id="history-card">
+    <div class="card-header">Run History</div>
+    <div class="card-body">
+      <table>
+        <thead><tr><th>Emails</th><th>Time</th><th>Rate</th><th>Mode</th><th></th></tr></thead>
+        <tbody id="history-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Comparison -->
+  <div class="card results" id="chart-card">
+    <div class="card-header">Visual Comparison</div>
+    <div class="card-body" id="chart-body" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
+<script>
+let selectedCount = 10000;
+let history = [];
+
+function selectPreset(count, el) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('custom-row').style.display = count === 0 ? 'flex' : 'none';
+  selectedCount = count;
+}
+
+function generateEmails(n) {
+  const domains = ['company.com','corp.net','org.edu','example.com','partner.org','work.io','mail.com','biz.co'];
+  const emails = [];
+  for (let i = 0; i < n; i++) {
+    emails.push(`user${i}@${domains[i % domains.length]}`);
+  }
+  return emails;
+}
+
+async function hashBatch(emails) {
+  const encoder = new TextEncoder();
+  const hashes = [];
+  for (const email of emails) {
+    const data = encoder.encode(email.toLowerCase());
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    hashes.push(hashArray.map(b => b.toString(16).padStart(2, '0')).join(''));
+  }
+  return hashes;
+}
+
+async function runBenchmark() {
+  const count = selectedCount || parseInt(document.getElementById('custom-count').value) || 10000;
+  const mode = document.getElementById('mode-select').value;
+  const btn = document.getElementById('run-btn');
+  const progressArea = document.getElementById('progress-area');
+  const progressFill = document.getElementById('progress-fill');
+  const progressText = document.getElementById('progress-text');
+
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Running...';
+  progressArea.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressFill.classList.remove('done');
+
+  // Step 1: Generate emails
+  progressText.textContent = `Generating ${count.toLocaleString()} test emails...`;
+  await sleep(50);
+  const emails = generateEmails(count);
+  progressFill.style.width = '10%';
+  progressText.textContent = 'Hashing with SHA-256 via Web Crypto API...';
+  await sleep(50);
+
+  // Step 2: Hash
+  const startTime = performance.now();
+  const CHUNK = 50000;
+  let allHashes = [];
+
+  if (mode === 'chunked' && count > CHUNK) {
+    const totalChunks = Math.ceil(count / CHUNK);
+    for (let i = 0; i < totalChunks; i++) {
+      const chunk = emails.slice(i * CHUNK, (i + 1) * CHUNK);
+      const chunkHashes = await hashBatch(chunk);
+      allHashes = allHashes.concat(chunkHashes);
+      const pct = 10 + ((i + 1) / totalChunks) * 85;
+      progressFill.style.width = pct + '%';
+      progressText.textContent = `Hashed ${Math.min((i + 1) * CHUNK, count).toLocaleString()} / ${count.toLocaleString()} emails...`;
+      await sleep(10); // yield to UI
+    }
+  } else {
+    allHashes = await hashBatch(emails);
+  }
+
+  const endTime = performance.now();
+  const elapsed = (endTime - startTime) / 1000;
+
+  // Step 3: Build hash set (simulate storage)
+  progressFill.style.width = '98%';
+  progressText.textContent = 'Building hash set...';
+  await sleep(50);
+  const hashSet = new Set(allHashes);
+
+  progressFill.style.width = '100%';
+  progressFill.classList.add('done');
+  progressText.textContent = 'Complete!';
+
+  // Results
+  const rate = Math.round(count / elapsed);
+  const memMB = ((count * 66) / (1024 * 1024)).toFixed(1); // 64 hex chars + overhead per hash
+
+  document.getElementById('res-count').textContent = count.toLocaleString();
+  document.getElementById('res-time').textContent = elapsed < 1 ? (elapsed * 1000).toFixed(0) + 'ms' : elapsed.toFixed(2) + 's';
+  document.getElementById('res-rate').textContent = rate.toLocaleString() + '/s';
+  document.getElementById('res-mem').textContent = memMB + ' MB';
+
+  let verdict = '';
+  if (elapsed < 1) verdict = `Instant. ${count.toLocaleString()} emails hashed in under a second. No loading state needed — the user won't even notice.`;
+  else if (elapsed < 5) verdict = `Fast. ${count.toLocaleString()} emails processed in ${elapsed.toFixed(1)}s. A brief spinner is sufficient. Excellent for production use.`;
+  else if (elapsed < 15) verdict = `Smooth. ${count.toLocaleString()} emails in ${elapsed.toFixed(1)}s. A progress bar keeps the user informed. Well within acceptable UX.`;
+  else if (elapsed < 45) verdict = `Workable. ${count.toLocaleString()} emails in ${elapsed.toFixed(1)}s. Chunked processing keeps the UI responsive. Progress bar recommended.`;
+  else verdict = `Heavy. ${count.toLocaleString()} emails took ${elapsed.toFixed(1)}s. Consider offering a server-side option or CLI tool for rosters this large.`;
+
+  document.getElementById('res-verdict').textContent = verdict;
+  document.getElementById('results-card').classList.add('visible');
+
+  // History
+  history.push({ count, time: elapsed, rate, mode, memMB });
+  renderHistory();
+
+  btn.disabled = false;
+  btn.textContent = 'Run Benchmark';
+  setTimeout(() => { progressArea.style.display = 'none'; }, 2000);
+}
+
+function renderHistory() {
+  const tbody = document.getElementById('history-body');
+  const maxTime = Math.max(...history.map(h => h.time), 0.001);
+
+  tbody.innerHTML = history.map((h, i) => `
+    <tr>
+      <td><strong>${h.count.toLocaleString()}</strong></td>
+      <td>${h.time < 1 ? (h.time * 1000).toFixed(0) + 'ms' : h.time.toFixed(2) + 's'}</td>
+      <td>${h.rate.toLocaleString()}/s</td>
+      <td>${h.mode}</td>
+      <td style="font-size:11px;color:var(--gray-500);">${h.memMB} MB</td>
+    </tr>
+  `).join('');
+
+  document.getElementById('history-card').classList.add('visible');
+
+  // Chart
+  const chartBody = document.getElementById('chart-body');
+  chartBody.innerHTML = history.map(h => {
+    const barWidth = Math.max((h.time / maxTime) * 100, 2);
+    return `<div class="history-row">
+      <div class="history-label">${h.count >= 1000000 ? (h.count/1000000)+'M' : (h.count/1000)+'K'}</div>
+      <div class="history-bar" style="width:${barWidth}%;"></div>
+      <div class="history-value">${h.time < 1 ? (h.time*1000).toFixed(0)+'ms' : h.time.toFixed(2)+'s'}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('chart-card').classList.add('visible');
+}
+
+function clearHistory() {
+  history = [];
+  document.getElementById('history-body').innerHTML = '';
+  document.getElementById('chart-body').innerHTML = '';
+  document.getElementById('history-card').classList.remove('visible');
+  document.getElementById('chart-card').classList.remove('visible');
+  document.getElementById('results-card').classList.remove('visible');
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>
