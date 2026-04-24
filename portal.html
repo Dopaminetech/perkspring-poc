@@ -390,10 +390,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         Team & Security
       </a>
-      <a class="nav-item" data-page="billing" onclick="showPage('billing', this)">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        Billing
-      </a>
       <a class="nav-item" data-page="help" onclick="showPage('help', this)">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Help & Docs
@@ -771,7 +767,7 @@
       <div class="compliance-badge"><div class="compliance-icon pass">&#128225;</div><div class="compliance-info"><div class="title">Audit Logging</div><div class="status">Full audit trail — 12-month retention</div></div></div>
     </div>
     <div class="role-grid">
-      <div class="role-card" onclick="toast('Admin: Full access to all portal settings, billing, team management','info')"><div class="role-name">Admin</div><div class="role-desc">Full access to all settings</div><div class="role-count">2</div></div>
+      <div class="role-card" onclick="toast('Admin: Full access to all portal settings and team management','info')"><div class="role-name">Admin</div><div class="role-desc">Full access to all settings</div><div class="role-count">2</div></div>
       <div class="role-card" onclick="toast('Editor: Manage rosters, integrations, promo codes','info')"><div class="role-name">Editor</div><div class="role-desc">Manage rosters & integrations</div><div class="role-count">4</div></div>
       <div class="role-card" onclick="toast('Viewer: Read-only access to dashboard and reports','info')"><div class="role-name">Viewer</div><div class="role-desc">Read-only dashboard access</div><div class="role-count">8</div></div>
       <div class="role-card" onclick="toast('Analyst: Reports, data export, verification metrics','info')"><div class="role-name">Analyst</div><div class="role-desc">Reports & data export only</div><div class="role-count">3</div></div>
@@ -788,16 +784,6 @@
         </div>
       </div>
       <div class="card-body" id="audit-log-body"></div>
-    </div>
-  </div>
-
-  <!-- ═══════════ BILLING ═══════════ -->
-  <div class="page-view" id="page-billing">
-    <div class="page-header"><div><h1>Billing</h1><div class="subtitle">Manage your subscription and payment details</div></div><button class="btn btn-outline" onclick="toast('Billing portal opening...','info')">Manage Payment Method</button></div>
-    <div class="stats-row" style="grid-template-columns: repeat(3, 1fr);">
-      <div class="stat-card"><div class="label">Current Plan</div><div class="value" style="font-size:20px;">Enterprise</div><div class="sub">Unlimited members</div></div>
-      <div class="stat-card"><div class="label">Monthly Spend</div><div class="value">$2,450</div><div class="sub">Next billing: May 1, 2026</div></div>
-      <div class="stat-card"><div class="label">API Calls (MTD)</div><div class="value">184,291</div><div class="sub">Included in plan</div></div>
     </div>
   </div>
 
@@ -1348,7 +1334,7 @@ function confirmRemoveTeamMember(i) {
 function openSupportModal() {
   openModal('Open Support Ticket', `
     <div class="form-group"><label class="form-label">Subject</label><input class="form-input" placeholder="Briefly describe your issue..." /></div>
-    <div class="form-group"><label class="form-label">Category</label><select class="form-input"><option>Integration Issue</option><option>Roster Upload</option><option>Billing</option><option>Bug Report</option><option>Feature Request</option><option>Other</option></select></div>
+    <div class="form-group"><label class="form-label">Category</label><select class="form-input"><option>Integration Issue</option><option>Roster Upload</option><option>Bug Report</option><option>Feature Request</option><option>Other</option></select></div>
     <div class="form-group"><label class="form-label">Description</label><textarea class="form-input" rows="4" placeholder="Provide details..."></textarea></div>
     <div class="form-group"><label class="form-label">Priority</label><select class="form-input"><option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option></select></div>
   `, () => { toast('Support ticket submitted — expect a response within 2 hours','success'); closeModal(); }, { confirmText:'Submit Ticket' });
