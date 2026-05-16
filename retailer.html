@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PerkSpring — Retailer Portal</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    :root{--sidebar-bg:#0f172a;--sidebar-active:#1e3a5f;--sidebar-text:#8899b4;--sidebar-text-active:#fff;--topbar-bg:#1a2332;--body-bg:#f0f2f5;--card-bg:#fff;--navy:#0f2b5b;--blue:#2563eb;--blue-light:#dbeafe;--green:#16a34a;--green-light:#dcfce7;--red:#dc2626;--red-light:#fee2e2;--orange:#ea580c;--orange-light:#fff7ed;--purple:#7c3aed;--purple-light:#ede9fe;--teal:#0891b2;--teal-light:#cffafe;--gray-100:#f8fafc;--gray-200:#e2e8f0;--gray-300:#cbd5e1;--gray-500:#64748b;--gray-700:#334155;--gray-900:#0f172a;--radius:10px;--shadow:0 1px 3px rgba(0,0,0,.08)}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--body-bg);color:var(--gray-900);display:flex;min-height:100vh;overflow-x:hidden}
+
+    /* ── Sidebar ── */
+    .sidebar{width:230px;background:var(--sidebar-bg);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:10}
+    .sidebar-logo{padding:20px 18px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.06)}
+    .sidebar-logo .logo-icon{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+    .sidebar-logo .logo-icon svg{width:18px;height:18px;fill:#fff}
+    .sidebar-logo span{color:#fff;font-weight:700;font-size:15px;letter-spacing:-.3px}
+    .sidebar-logo .retailer-tag{font-size:9px;background:var(--teal);color:#fff;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:.5px;font-weight:700;margin-left:auto}
+    .sidebar-nav{flex:1;padding:12px 8px;overflow-y:auto}
+    .nav-section{margin-bottom:8px}
+    .nav-section-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--sidebar-text);padding:8px 12px 4px;font-weight:600}
+    .nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;color:var(--sidebar-text);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s;text-decoration:none;user-select:none}
+    .nav-item:hover{background:rgba(255,255,255,.05);color:#c4d0e2}
+    .nav-item.active{background:var(--sidebar-active);color:var(--sidebar-text-active)}
+    .nav-item svg{width:18px;height:18px;flex-shrink:0}
+    .nav-item .badge{margin-left:auto;background:var(--teal);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
+    .nav-item .badge.alert{background:var(--red)}
+
+    /* ── Topbar ── */
+    .topbar{height:56px;background:var(--topbar-bg);display:flex;align-items:center;padding:0 24px;gap:16px;position:fixed;top:0;left:230px;right:0;z-index:9}
+    .search-bar{flex:1;max-width:480px;position:relative}
+    .search-bar input{width:100%;padding:8px 12px 8px 36px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:13px;outline:none;transition:all .2s}
+    .search-bar input:focus{background:rgba(255,255,255,.12);border-color:var(--teal)}
+    .search-bar input::placeholder{color:var(--sidebar-text)}
+    .search-bar svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--sidebar-text)}
+    .search-results{position:absolute;top:100%;left:0;right:0;background:var(--topbar-bg);border:1px solid rgba(255,255,255,.12);border-radius:0 0 8px 8px;display:none;max-height:300px;overflow-y:auto}
+    .search-results.visible{display:block}
+    .search-result-item{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--sidebar-text);display:flex;align-items:center;gap:10px}
+    .search-result-item:hover{background:rgba(255,255,255,.08);color:#fff}
+    .search-result-item .sr-type{font-size:10px;background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px;text-transform:uppercase}
+    .topbar-right{display:flex;align-items:center;gap:16px;margin-left:auto}
+    .topbar-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--sidebar-text);cursor:pointer;position:relative}
+    .topbar-icon:hover{background:rgba(255,255,255,.08)}
+    .topbar-icon svg{width:18px;height:18px}
+    .notif-dot{width:8px;height:8px;background:var(--red);border-radius:50%;position:absolute;top:6px;right:6px}
+    .org-badge{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);border-radius:6px;padding:4px 10px;color:#fff;font-size:12px;font-weight:600;cursor:pointer}
+    .user-avatar{width:32px;height:32px;border-radius:50%;background:var(--teal);display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;cursor:pointer}
+    .env-badge{font-size:10px;padding:3px 8px;border-radius:4px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+    .env-badge.live{background:var(--green);color:#fff}
+    .env-badge.sandbox{background:var(--orange);color:#fff}
+
+    /* ── Notif dropdown ── */
+    .notif-dropdown{position:absolute;top:44px;right:0;width:340px;background:#fff;border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.15);border:1px solid var(--gray-200);display:none;z-index:100}
+    .notif-dropdown.visible{display:block}
+    .notif-dropdown-header{padding:12px 16px;border-bottom:1px solid var(--gray-200);font-weight:700;font-size:14px;display:flex;justify-content:space-between;align-items:center}
+    .notif-dropdown-header button{background:none;border:none;color:var(--blue);font-size:12px;cursor:pointer;font-weight:600}
+    .notif-item{padding:12px 16px;border-bottom:1px solid var(--gray-200);cursor:pointer;transition:background .15s}
+    .notif-item:hover{background:var(--gray-100)}
+    .notif-item:last-child{border-bottom:none}
+    .notif-item.unread{background:var(--blue-light)}
+    .notif-item .ni-title{font-size:13px;font-weight:600}
+    .notif-item .ni-desc{font-size:12px;color:var(--gray-500);margin-top:2px}
+    .notif-item .ni-time{font-size:11px;color:var(--gray-500);margin-top:4px}
+    .notif-item.alert{border-left:3px solid var(--red)}
+
+    /* ── Main ── */
+    .main{margin-left:230px;margin-top:56px;flex:1;padding:24px;min-height:calc(100vh - 56px)}
+
+    /* ── Common ── */
+    .page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+    .page-header h1{font-size:22px;font-weight:700}
+    .page-header .subtitle{color:var(--gray-500);font-size:14px;margin-top:2px}
+    .header-actions{display:flex;gap:10px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none;white-space:nowrap}
+    .btn:active{transform:scale(.97)}
+    .btn svg{width:16px;height:16px}
+    .btn-primary{background:var(--teal);color:#fff}
+    .btn-primary:hover{background:#0e7490}
+    .btn-blue{background:var(--blue);color:#fff}
+    .btn-blue:hover{background:#1d4ed8}
+    .btn-outline{background:#fff;color:var(--gray-700);border:1px solid var(--gray-200)}
+    .btn-outline:hover{background:var(--gray-100)}
+    .btn-success{background:var(--green);color:#fff}
+    .btn-danger{background:var(--red);color:#fff}
+    .btn-sm{padding:6px 12px;font-size:12px}
+    .btn-ghost{background:transparent;color:var(--gray-500);border:1px solid transparent}
+    .btn-ghost:hover{background:var(--gray-100);color:var(--gray-700)}
+    .btn:disabled{opacity:.5;cursor:not-allowed}
+
+    .card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200)}
+    .card-header{padding:16px 20px;border-bottom:1px solid var(--gray-200);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .card-header h3{font-size:14px;font-weight:600}
+    .card-body{padding:20px}
+
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid var(--gray-200);padding:20px;transition:all .2s;cursor:default}
+    .stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,.1);transform:translateY(-2px)}
+    .stat-card .label{font-size:12px;color:var(--gray-500);font-weight:500;text-transform:uppercase;letter-spacing:.3px}
+    .stat-card .value{font-size:28px;font-weight:800;margin-top:6px;color:var(--navy)}
+    .stat-card .change{font-size:12px;margin-top:4px;font-weight:600}
+    .stat-card .change.up{color:var(--green)}
+    .stat-card .change.down{color:var(--red)}
+    .stat-card .sub{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+    .grid-2{display:grid;grid-template-columns:2fr 1fr;gap:16px}
+    .grid-equal{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+
+    .tabs{display:flex;gap:4px;border-bottom:2px solid var(--gray-200);margin-bottom:20px}
+    .tab{padding:10px 16px;font-size:13px;font-weight:500;color:var(--gray-500);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none}
+    .tab:hover{color:var(--gray-700)}
+    .tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+    .tab-content{display:none}
+    .tab-content.active{display:block;animation:fadeUp .25s ease-out}
+
+    table{width:100%;border-collapse:collapse}
+    th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-500);font-weight:600;padding:10px 16px;border-bottom:2px solid var(--gray-200);user-select:none}
+    th.sortable{cursor:pointer}
+    th.sortable:hover{color:var(--teal)}
+    th.sortable::after{content:' \2195';font-size:10px}
+    td{padding:12px 16px;border-bottom:1px solid var(--gray-200);font-size:13px}
+    tr:hover td{background:var(--gray-100)}
+    .table-wrap{overflow-x:auto}
+
+    .status-pill{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+    .status-pill.active{background:var(--green-light);color:var(--green)}
+    .status-pill.pending{background:var(--orange-light);color:var(--orange)}
+    .status-pill.blocked{background:var(--red-light);color:var(--red)}
+    .status-pill.inactive{background:var(--gray-200);color:var(--gray-500)}
+
+    .form-group{margin-bottom:16px}
+    .form-label{font-size:12px;font-weight:600;color:var(--gray-700);margin-bottom:6px;display:block}
+    .form-input{width:100%;padding:9px 12px;border:1px solid var(--gray-300);border-radius:8px;font-size:13px;outline:none;transition:all .2s;font-family:inherit}
+    .form-input:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(8,145,178,.1)}
+    select.form-input{appearance:none;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center;padding-right:32px;cursor:pointer}
+    textarea.form-input{resize:vertical;min-height:80px}
+
+    .filter-chips{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+    .chip{padding:5px 12px;border-radius:20px;font-size:12px;font-weight:500;border:1px solid var(--gray-200);cursor:pointer;transition:all .15s;user-select:none}
+    .chip:hover{border-color:var(--teal)}
+    .chip.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+
+    .mono{font-family:'SF Mono','Fira Code',monospace;font-size:12px}
+    .code-block{background:var(--gray-900);color:#e2e8f0;padding:16px;border-radius:8px;font-family:'SF Mono',monospace;font-size:12px;overflow-x:auto;position:relative;line-height:1.6}
+    .code-block .copy-btn{position:absolute;top:8px;right:8px;background:rgba(255,255,255,.1);border:none;color:#94a3b8;padding:4px 8px;border-radius:4px;font-size:11px;cursor:pointer}
+    .code-block .copy-btn:hover{background:rgba(255,255,255,.2);color:#fff}
+
+    .toggle{position:relative;width:44px;height:24px;display:inline-block}
+    .toggle input{opacity:0;width:0;height:0}
+    .toggle .slider{position:absolute;inset:0;background:var(--gray-300);border-radius:12px;cursor:pointer;transition:.2s}
+    .toggle .slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s}
+    .toggle input:checked+.slider{background:var(--teal)}
+    .toggle input:checked+.slider::before{transform:translateX(20px)}
+
+    .alert-banner{padding:12px 20px;border-radius:var(--radius);display:flex;align-items:center;gap:12px;margin-bottom:16px;font-size:13px;font-weight:500;animation:fadeUp .3s ease-out}
+    .alert-banner.danger{background:var(--red-light);color:var(--red);border:1px solid #fca5a5}
+    .alert-banner.warning{background:var(--orange-light);color:var(--orange);border:1px solid #fed7aa}
+    .alert-banner.info{background:var(--teal-light);color:var(--teal);border:1px solid #a5f3fc}
+    .alert-banner svg{width:20px;height:20px;flex-shrink:0}
+    .alert-banner .dismiss{margin-left:auto;cursor:pointer;opacity:.6}
+    .alert-banner .dismiss:hover{opacity:1}
+
+    .activity-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-200);cursor:pointer;transition:background .15s;margin:0 -20px;padding-left:20px;padding-right:20px}
+    .activity-item:hover{background:var(--gray-100)}
+    .activity-item:last-child{border-bottom:none}
+    .activity-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .activity-icon.blue{background:var(--blue-light);color:var(--blue)}
+    .activity-icon.green{background:var(--green-light);color:var(--green)}
+    .activity-icon.red{background:var(--red-light);color:var(--red)}
+    .activity-icon.orange{background:var(--orange-light);color:var(--orange)}
+    .activity-icon.teal{background:var(--teal-light);color:var(--teal)}
+    .activity-icon svg{width:18px;height:18px}
+    .activity-text{font-size:13px;line-height:1.4}
+    .activity-text strong{font-weight:600}
+    .activity-time{font-size:11px;color:var(--gray-500);margin-top:2px}
+
+    .member-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--gray-200);transition:background .15s;margin:0 -20px;padding-left:20px;padding-right:20px}
+    .member-row:hover{background:var(--gray-100)}
+    .member-row:last-child{border-bottom:none}
+    .member-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+    .member-info{flex:1}
+    .member-info .name{font-weight:600;font-size:13px}
+    .member-info .email{font-size:12px;color:var(--gray-500)}
+    .member-role{font-size:12px;font-weight:600;color:var(--gray-700);background:var(--gray-100);padding:3px 10px;border-radius:12px}
+    .member-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+    .member-row:hover .member-actions{opacity:1}
+
+    .compliance-row{display:flex;gap:16px;margin-bottom:24px}
+    .compliance-badge{flex:1;padding:20px;border:1px solid var(--gray-200);border-radius:var(--radius);display:flex;align-items:center;gap:14px;transition:all .2s}
+    .compliance-badge:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+    .compliance-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+    .compliance-icon.pass{background:var(--green-light)}
+    .compliance-info .title{font-weight:700;font-size:14px}
+    .compliance-info .status{font-size:12px;color:var(--gray-500)}
+
+    .log-entry{display:flex;gap:12px;padding:10px 16px;border-bottom:1px solid var(--gray-200);font-size:13px;transition:background .15s;margin:0 -20px;padding-left:20px;padding-right:20px}
+    .log-entry:hover{background:var(--gray-100)}
+    .log-entry:last-child{border-bottom:none}
+    .log-time{color:var(--gray-500);font-family:monospace;font-size:12px;min-width:140px}
+    .log-user{font-weight:600;min-width:120px}
+    .log-action{color:var(--gray-700)}
+
+    .chart-area{height:220px;display:flex;align-items:flex-end;justify-content:space-around;padding:16px 8px;gap:3px}
+    .chart-bar-group{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+    .chart-bars{display:flex;gap:2px;align-items:flex-end}
+    .chart-bar{width:12px;border-radius:3px 3px 0 0;transition:all .3s ease-out;cursor:pointer}
+    .chart-bar:hover{opacity:.8}
+    .chart-bar.approved{background:var(--green)}
+    .chart-bar.rejected{background:var(--red)}
+    .chart-bar.pending{background:var(--orange)}
+    .chart-label{font-size:10px;color:var(--gray-500)}
+    .chart-tooltip{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:var(--gray-900);color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s;z-index:5}
+    .chart-bar-group:hover .chart-tooltip{opacity:1}
+
+    .donut-chart{width:140px;height:140px;border-radius:50%;position:relative;display:flex;align-items:center;justify-content:center}
+    .donut-center{text-align:center}
+    .donut-center .big{font-size:28px;font-weight:800;color:var(--navy)}
+    .donut-center .small{font-size:11px;color:var(--gray-500)}
+
+    .key-card{display:flex;align-items:center;gap:16px;padding:16px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;transition:all .2s}
+    .key-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.06)}
+    .key-info{flex:1}
+    .key-info .key-name{font-weight:600;font-size:14px}
+    .key-info .key-meta{font-size:12px;color:var(--gray-500);margin-top:2px}
+    .key-value{font-family:'SF Mono',monospace;font-size:12px;background:var(--gray-100);padding:6px 12px;border-radius:6px;color:var(--navy);cursor:pointer;position:relative}
+    .key-value:hover{background:var(--teal-light)}
+
+    .rule-card{padding:16px;border:1px solid var(--gray-200);border-radius:var(--radius);margin-bottom:10px;display:flex;align-items:center;gap:16px}
+    .rule-card:hover{box-shadow:var(--shadow)}
+    .rule-info{flex:1}
+    .rule-info .rule-name{font-weight:600;font-size:14px}
+    .rule-info .rule-desc{font-size:12px;color:var(--gray-500);margin-top:2px}
+    .rule-severity{font-size:11px;font-weight:600;padding:3px 8px;border-radius:4px}
+    .rule-severity.high{background:var(--red-light);color:var(--red)}
+    .rule-severity.medium{background:var(--orange-light);color:var(--orange)}
+    .rule-severity.low{background:var(--blue-light);color:var(--blue)}
+
+    /* ── Modal ── */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px)}
+    .modal-overlay.visible{display:flex}
+    .modal{background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.2);max-width:520px;width:90%;max-height:85vh;overflow-y:auto;animation:modalIn .25s ease-out}
+    .modal-lg{max-width:680px}
+    .modal-header{padding:20px 24px 16px;display:flex;align-items:center;justify-content:space-between}
+    .modal-header h2{font-size:18px;font-weight:700}
+    .modal-close{width:32px;height:32px;border-radius:8px;border:none;background:var(--gray-100);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--gray-500)}
+    .modal-close:hover{background:var(--gray-200)}
+    .modal-body{padding:0 24px 24px}
+    .modal-footer{padding:16px 24px;border-top:1px solid var(--gray-200);display:flex;justify-content:flex-end;gap:8px}
+
+    /* ── Toast ── */
+    .toast-container{position:fixed;bottom:24px;right:24px;z-index:2000;display:flex;flex-direction:column-reverse;gap:8px}
+    .toast{padding:12px 20px;border-radius:10px;color:#fff;font-size:13px;font-weight:500;display:flex;align-items:center;gap:10px;min-width:280px;box-shadow:0 8px 24px rgba(0,0,0,.2);animation:toastIn .3s ease-out;cursor:pointer}
+    .toast.info{background:var(--navy)}
+    .toast.success{background:var(--green)}
+    .toast.error{background:var(--red)}
+    .toast.warning{background:var(--orange)}
+    .toast.exiting{animation:toastOut .3s ease-in forwards}
+
+    .page-view{display:none}
+    .page-view.active{display:block;animation:fadeUp .25s ease-out}
+    .greeting{font-size:15px;color:var(--gray-500);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+    .greeting strong{color:var(--gray-900)}
+
+    .preview-frame{width:100%;height:500px;border:1px solid var(--gray-200);border-radius:8px;background:#fff}
+
+    @keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes toastIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes toastOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(40px)}}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    .pulse{animation:pulse 2s infinite}
+  </style>
+</head>
+<body>
+
+<!-- ═══ SIDEBAR ═══ -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg></div>
+    <span>PerkSpring</span>
+    <span class="retailer-tag">Retailer</span>
+  </div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">
+      <a class="nav-item active" data-page="dashboard" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" data-page="partners" onclick="showPage('partners',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Partners
+        <span class="badge">3</span>
+      </a>
+      <a class="nav-item" data-page="reports" onclick="showPage('reports',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+        Reports
+      </a>
+      <a class="nav-item" data-page="configurations" onclick="showPage('configurations',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+        Configurations
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-section-label">Settings</div>
+      <a class="nav-item" data-page="team" onclick="showPage('team',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Team & Security
+      </a>
+      <a class="nav-item" data-page="billing" onclick="showPage('billing',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        Billing
+      </a>
+      <a class="nav-item" data-page="help" onclick="showPage('help',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Help & Docs
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ═══ TOPBAR ═══ -->
+<div class="topbar">
+  <div class="search-bar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+    <input type="text" id="global-search" placeholder="Search verifications, partners, reports..." autocomplete="off" oninput="handleSearch()" />
+    <div class="search-results" id="search-results"></div>
+  </div>
+  <div class="topbar-right">
+    <span class="env-badge live" id="env-badge" onclick="toggleEnv()">LIVE</span>
+    <div class="topbar-icon" id="notif-bell" onclick="toggleNotif()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
+      <div class="notif-dot" id="notif-dot"></div>
+      <div class="notif-dropdown" id="notif-dropdown">
+        <div class="notif-dropdown-header">Alerts & Notifications <button onclick="markAllRead(event)">Mark all read</button></div>
+        <div class="notif-item unread alert" onclick="toast('Anomaly: 340 requests from single IP in 2 min','error')"><div class="ni-title">&#9888; Anomaly Detected</div><div class="ni-desc">Unusual verification spike — 340 requests from single IP in 2 minutes</div><div class="ni-time">4 min ago</div></div>
+        <div class="notif-item unread" onclick="toast('A1CashBack partner connected','success')"><div class="ni-title">New Partner Connected</div><div class="ni-desc">A1CashBack has completed integration setup</div><div class="ni-time">1 hr ago</div></div>
+        <div class="notif-item" onclick="toast('Monthly verification report ready','info')"><div class="ni-title">Report Ready</div><div class="ni-desc">April Verification Report is available for download</div><div class="ni-time">Yesterday</div></div>
+        <div class="notif-item" onclick="toast('API key pk_live_8x rotated','info')"><div class="ni-title">API Key Rotated</div><div class="ni-desc">Production key pk_live_8x*** was rotated by Sarah Chen</div><div class="ni-time">2 days ago</div></div>
+      </div>
+    </div>
+    <div class="org-badge" onclick="toast('Organization switcher coming soon','info')">Walmart</div>
+    <div class="user-avatar">SC</div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-container"></div>
+</div>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- ─── DASHBOARD ─── -->
+<div class="page-view active" id="page-dashboard">
+  <div class="greeting">
+    <span>Good morning, <strong>Walmart Partner Team</strong></span>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span>May 16, 2026</span>
+    </div>
+  </div>
+
+  <div class="alert-banner danger" id="anomaly-alert">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <div><strong>Anomaly Alert:</strong> Unusual verification spike detected — 340 requests from IP 192.168.44.x in 2 minutes. Auto-blocked by rate limiter.</div>
+    <span class="dismiss" onclick="this.closest('.alert-banner').remove()">&#10005;</span>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="label">Total Verifications</div><div class="value" data-count="187429">0</div><div class="change up">+8.3% vs last month</div></div>
+    <div class="stat-card"><div class="label">Approval Rate</div><div class="value" data-count="94.2" data-suffix="%" data-decimal="1">0%</div><div class="change up">+0.4%</div></div>
+    <div class="stat-card"><div class="label">Redemptions</div><div class="value" data-count="28391">0</div><div class="sub">$412K attributed revenue</div></div>
+    <div class="stat-card"><div class="label">Fraud Blocked</div><div class="value" data-count="847">0</div><div class="sub">0.45% of total attempts</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <h3>Verification Activity — Last 30 Days</h3>
+        <div style="display:flex;gap:16px;font-size:12px;">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--green);border-radius:2px;display:inline-block;"></span> Approved</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--red);border-radius:2px;display:inline-block;"></span> Rejected</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;background:var(--orange);border-radius:2px;display:inline-block;"></span> Flagged</span>
+        </div>
+      </div>
+      <div class="card-body"><div class="chart-area" id="chart"></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Recent Activity</h3><button class="btn btn-sm btn-ghost" onclick="toast('Feed refreshed','info')">Refresh</button></div>
+      <div class="card-body" style="padding:12px 20px;">
+        <div class="activity-item" onclick="showPage('reports',document.querySelector('[data-page=reports]'))">
+          <div class="activity-icon red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+          <div><div class="activity-text"><strong>Anomaly blocked</strong> — 340 requests, IP rate-limited</div><div class="activity-time">4 min ago</div></div>
+        </div>
+        <div class="activity-item" onclick="showPage('partners',document.querySelector('[data-page=partners]'))">
+          <div class="activity-icon green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div><div class="activity-text"><strong>A1CashBack</strong> integration activated</div><div class="activity-time">1 hr ago</div></div>
+        </div>
+        <div class="activity-item" onclick="toast('1,204 verifications from AAA in last hour','info')">
+          <div class="activity-icon teal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div><div class="activity-text"><strong>AAA</strong> — 1,204 verifications in last hour</div><div class="activity-time">Ongoing</div></div>
+        </div>
+        <div class="activity-item" onclick="toast('Top discount: SAVE15 with 4,201 redemptions','info')">
+          <div class="activity-icon blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+          <div><div class="activity-text"><strong>SAVE15</strong> is top discount — 4,201 redemptions</div><div class="activity-time">Today</div></div>
+        </div>
+        <div class="activity-item" onclick="showPage('configurations',document.querySelector('[data-page=configurations]'))">
+          <div class="activity-icon orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33"/></svg></div>
+          <div><div class="activity-text"><strong>Fraud rule updated</strong> — velocity threshold raised to 10/min</div><div class="activity-time">3 hrs ago</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-equal" style="margin-top:16px;">
+    <div class="card">
+      <div class="card-header"><h3>Top Discounts Redeemed</h3></div>
+      <div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Code</th><th>Redemptions</th><th>Revenue</th></tr></thead>
+        <tbody>
+          <tr><td><strong>SAVE15</strong></td><td>4,201</td><td>$62,100</td></tr>
+          <tr><td><strong>NEWMEMBER10</strong></td><td>3,847</td><td>$48,200</td></tr>
+          <tr><td><strong>HOLIDAY25</strong></td><td>2,110</td><td>$89,300</td></tr>
+          <tr><td><strong>FLASH20</strong></td><td>1,903</td><td>$34,800</td></tr>
+          <tr><td><strong>PERKSPRING5</strong></td><td>1,221</td><td>$12,400</td></tr>
+        </tbody></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Top Affinity Partners</h3></div>
+      <div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Partner</th><th>Verifications</th><th>Approval %</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AAA</strong></td><td>98,412</td><td><span class="status-pill active">96.1%</span></td></tr>
+          <tr><td><strong>EmployeeMall</strong></td><td>62,301</td><td><span class="status-pill active">93.8%</span></td></tr>
+          <tr><td><strong>A1CashBack</strong></td><td>26,716</td><td><span class="status-pill active">91.2%</span></td></tr>
+        </tbody></table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── PARTNERS ─── -->
+<div class="page-view" id="page-partners">
+  <div class="page-header">
+    <div><h1>Partners</h1><div class="subtitle">Manage connected membership organizations</div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="toast('Partner marketplace coming soon','info')">Browse Partners</button>
+      <button class="btn btn-primary" onclick="openModal('Invite Partner','<div class=form-group><label class=form-label>Organization Name</label><input class=form-input placeholder=\"e.g., Blue Cross Blue Shield\"/></div><div class=form-group><label class=form-label>Contact Email</label><input class=form-input placeholder=\"partnerships@org.com\"/></div><div class=form-group><label class=form-label>Estimated Member Count</label><input class=form-input type=number placeholder=\"500000\"/></div><div class=form-group><label class=form-label>Message</label><textarea class=form-input placeholder=\"We would love to offer your members exclusive discounts...\"></textarea></div>',()=>{toast('Partner invitation sent','success');closeModal()},{confirmText:'Send Invitation'})">+ Invite Partner</button>
+    </div>
+  </div>
+  <div class="tabs" id="partners-tabs">
+    <div class="tab active" onclick="switchTab('partners-tabs','partners-tc',0,this)">Active Partners</div>
+    <div class="tab" onclick="switchTab('partners-tabs','partners-tc',1,this)">Invitations</div>
+    <div class="tab" onclick="switchTab('partners-tabs','partners-tc',2,this)">Per-Partner Rules</div>
+  </div>
+  <div class="tab-content active" data-tabgroup="partners-tc">
+    <div class="card"><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th>Organization</th><th>Members</th><th>Verifications (30d)</th><th>Approval Rate</th><th>Connected</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><strong>AAA</strong></td><td>1,247,893</td><td>98,412</td><td><span class="status-pill active">96.1%</span></td><td>Jan 15, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('AAA partner details','info')">View</button></td></tr>
+        <tr><td><strong>EmployeeMall</strong></td><td>842,100</td><td>62,301</td><td><span class="status-pill active">93.8%</span></td><td>Feb 3, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('EmployeeMall partner details','info')">View</button></td></tr>
+        <tr><td><strong>A1CashBack</strong></td><td>310,450</td><td>26,716</td><td><span class="status-pill active">91.2%</span></td><td>May 15, 2026</td><td><button class="btn btn-sm btn-outline" onclick="toast('A1CashBack partner details','info')">View</button></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+  <div class="tab-content" data-tabgroup="partners-tc">
+    <div class="card"><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th>Organization</th><th>Contact</th><th>Sent</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <tr><td><strong>Blue Cross Blue Shield</strong></td><td>perks@bcbs.com</td><td>May 10, 2026</td><td><span class="status-pill pending">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Reminder sent','success')">Resend</button></td></tr>
+        <tr><td><strong>USAA</strong></td><td>partnerships@usaa.com</td><td>May 8, 2026</td><td><span class="status-pill pending">Pending</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Reminder sent','success')">Resend</button></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+  <div class="tab-content" data-tabgroup="partners-tc">
+    <div class="card" style="margin-bottom:16px"><div class="card-header"><h3>AAA — Partner Rules</h3><button class="btn btn-sm btn-outline" onclick="toast('Rules saved','success')">Save</button></div><div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">Discount Code</label><input class="form-input" value="WMT-AAA-2026" /></div>
+        <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" type="number" value="15" /></div>
+        <div class="form-group"><label class="form-label">Max Redemptions / Member</label><select class="form-input"><option>Unlimited</option><option selected>1 per month</option><option>1 per quarter</option><option>1 per year</option></select></div>
+        <div class="form-group"><label class="form-label">Verification Method</label><select class="form-input"><option selected>Hash Match</option><option>API Callback</option><option>Cookie + Hash</option></select></div>
+      </div>
+    </div></div>
+    <div class="card"><div class="card-header"><h3>EmployeeMall — Partner Rules</h3><button class="btn btn-sm btn-outline" onclick="toast('Rules saved','success')">Save</button></div><div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group"><label class="form-label">Discount Code</label><input class="form-input" value="WMT-EMALL-15" /></div>
+        <div class="form-group"><label class="form-label">Discount %</label><input class="form-input" type="number" value="15" /></div>
+        <div class="form-group"><label class="form-label">Max Redemptions / Member</label><select class="form-input"><option>Unlimited</option><option selected>1 per month</option></select></div>
+        <div class="form-group"><label class="form-label">Verification Method</label><select class="form-input"><option selected>Hash Match</option><option>API Callback</option></select></div>
+      </div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ─── REPORTS ─── -->
+<div class="page-view" id="page-reports">
+  <div class="page-header">
+    <div><h1>Reports</h1><div class="subtitle">Verification analytics, fraud monitoring, and data export</div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="openExportModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export Data</button>
+      <button class="btn btn-primary" onclick="openReportBuilder()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Custom Report</button>
+    </div>
+  </div>
+  <div class="tabs" id="reports-tabs">
+    <div class="tab active" onclick="switchTab('reports-tabs','reports-tc',0,this)">Overview</div>
+    <div class="tab" onclick="switchTab('reports-tabs','reports-tc',1,this)">Verification Log</div>
+    <div class="tab" onclick="switchTab('reports-tabs','reports-tc',2,this)">Fraud Activity</div>
+    <div class="tab" onclick="switchTab('reports-tabs','reports-tc',3,this)">Scheduled</div>
+  </div>
+
+  <!-- Overview -->
+  <div class="tab-content active" data-tabgroup="reports-tc">
+    <div class="stats-row">
+      <div class="stat-card"><div class="label">Verifications</div><div class="value">187,429</div><div class="sub">All time</div></div>
+      <div class="stat-card"><div class="label">Approval Rate</div><div class="value">94.2%</div><div class="change up">+0.4%</div></div>
+      <div class="stat-card"><div class="label">Fraud Blocked</div><div class="value">847</div><div class="sub">0.45% block rate</div></div>
+      <div class="stat-card"><div class="label">Avg Response Time</div><div class="value">42ms</div><div class="sub">P99: 180ms</div></div>
+    </div>
+    <div class="grid-equal">
+      <div class="card"><div class="card-header"><h3>Top Discounts Redeemed</h3></div><div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Code</th><th>Partner</th><th>Redemptions</th><th>Revenue</th></tr></thead>
+        <tbody>
+          <tr><td><strong>SAVE15</strong></td><td>AAA</td><td>4,201</td><td>$62,100</td></tr>
+          <tr><td><strong>NEWMEMBER10</strong></td><td>EmployeeMall</td><td>3,847</td><td>$48,200</td></tr>
+          <tr><td><strong>HOLIDAY25</strong></td><td>AAA</td><td>2,110</td><td>$89,300</td></tr>
+          <tr><td><strong>FLASH20</strong></td><td>A1CashBack</td><td>1,903</td><td>$34,800</td></tr>
+        </tbody></table>
+      </div></div>
+      <div class="card"><div class="card-header"><h3>Top Affinity Partners</h3></div><div class="card-body table-wrap" style="padding:0;">
+        <table><thead><tr><th>Partner</th><th>Verifications</th><th>Redemptions</th><th>Approval</th></tr></thead>
+        <tbody>
+          <tr><td><strong>AAA</strong></td><td>98,412</td><td>12,847</td><td>96.1%</td></tr>
+          <tr><td><strong>EmployeeMall</strong></td><td>62,301</td><td>9,402</td><td>93.8%</td></tr>
+          <tr><td><strong>A1CashBack</strong></td><td>26,716</td><td>6,142</td><td>91.2%</td></tr>
+        </tbody></table>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- Verification Log -->
+  <div class="tab-content" data-tabgroup="reports-tc">
+    <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <input class="form-input" style="max-width:280px;" placeholder="Search by hash, IP, or partner..." id="vlog-search" oninput="filterVLog()" />
+      <select class="form-input" style="width:140px;" onchange="toast('Filter: '+this.value,'info')"><option>All Statuses</option><option>Approved</option><option>Rejected</option><option>Flagged</option></select>
+      <select class="form-input" style="width:140px;" onchange="toast('Filter: '+this.value,'info')"><option>All Partners</option><option>AAA</option><option>EmployeeMall</option><option>A1CashBack</option></select>
+      <select class="form-input" style="width:140px;"><option>Last 24 hours</option><option>Last 7 days</option><option selected>Last 30 days</option><option>Custom</option></select>
+    </div>
+    <div class="card"><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th class="sortable">Timestamp</th><th class="sortable">Hash (prefix)</th><th>Partner</th><th class="sortable">Result</th><th>IP Address</th><th>Response</th></tr></thead>
+      <tbody id="vlog-body"></tbody></table>
+    </div></div>
+  </div>
+
+  <!-- Fraud Activity -->
+  <div class="tab-content" data-tabgroup="reports-tc">
+    <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="stat-card"><div class="label">Total Fraud Attempts</div><div class="value" style="color:var(--red);">847</div><div class="sub">Last 30 days</div></div>
+      <div class="stat-card"><div class="label">Auto-Blocked</div><div class="value">812</div><div class="sub">95.9% catch rate</div></div>
+      <div class="stat-card"><div class="label">Manual Review</div><div class="value">35</div><div class="sub">4.1% escalated</div></div>
+    </div>
+    <div class="card"><div class="card-header"><h3>Recent Fraud Attempts</h3></div><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th>Time</th><th>Type</th><th>Details</th><th>IP</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">May 16 09:41</td><td><span class="status-pill blocked">Rate Limit</span></td><td>340 requests in 2 min from single IP</td><td class="mono">192.168.44.12</td><td>Auto-blocked</td></tr>
+        <tr><td class="mono">May 15 22:18</td><td><span class="status-pill blocked">Brute Force</span></td><td>Sequential hash enumeration detected</td><td class="mono">10.0.0.88</td><td>Auto-blocked + alert</td></tr>
+        <tr><td class="mono">May 15 14:33</td><td><span class="status-pill pending">Suspicious</span></td><td>12 rejections in 1 min — possible list testing</td><td class="mono">172.16.0.44</td><td>Flagged for review</td></tr>
+        <tr><td class="mono">May 14 08:02</td><td><span class="status-pill blocked">Geo Anomaly</span></td><td>Verification from blocked country</td><td class="mono">203.0.113.5</td><td>Auto-blocked</td></tr>
+        <tr><td class="mono">May 13 19:50</td><td><span class="status-pill blocked">Rate Limit</span></td><td>180 requests in 3 min</td><td class="mono">198.51.100.7</td><td>Auto-blocked</td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+
+  <!-- Scheduled -->
+  <div class="tab-content" data-tabgroup="reports-tc">
+    <div class="card"><div class="card-header"><h3>Scheduled Reports</h3><button class="btn btn-sm btn-primary" onclick="openModal('Schedule Report','<div class=form-group><label class=form-label>Report Type</label><select class=form-input><option>Verification Summary</option><option>Fraud Activity</option><option>Redemption Report</option><option>Partner Performance</option></select></div><div class=form-group><label class=form-label>Frequency</label><select class=form-input><option>Daily</option><option>Weekly</option><option>Monthly</option></select></div><div class=form-group><label class=form-label>Recipients</label><input class=form-input value=\"sarah.chen@walmart.com\" /></div>',()=>{toast('Report scheduled','success');closeModal()},{confirmText:'Schedule'})">+ Schedule</button></div><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th>Report</th><th>Frequency</th><th>Next Run</th><th>Recipients</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Daily Verification Digest</td><td>Daily 8:00 AM</td><td>May 17, 2026</td><td>sarah.chen@walmart.com</td><td><button class="btn btn-sm btn-outline" onclick="toast('Schedule edited','info')">Edit</button></td></tr>
+        <tr><td>Weekly Fraud Summary</td><td>Monday 9:00 AM</td><td>May 19, 2026</td><td>security@walmart.com</td><td><button class="btn btn-sm btn-outline" onclick="toast('Schedule edited','info')">Edit</button></td></tr>
+        <tr><td>Monthly Partner Performance</td><td>1st of month</td><td>Jun 1, 2026</td><td>sarah.chen@walmart.com, mike.r@walmart.com</td><td><button class="btn btn-sm btn-outline" onclick="toast('Schedule edited','info')">Edit</button></td></tr>
+      </tbody></table>
+    </div></div>
+  </div>
+</div>
+
+<!-- ─── CONFIGURATIONS ─── -->
+<div class="page-view" id="page-configurations">
+  <div class="page-header">
+    <div><h1>Configurations</h1><div class="subtitle">API keys, fraud rules, sandbox, and webhooks</div></div>
+    <button class="btn btn-primary" onclick="toast('All configurations saved','success')">Save All Changes</button>
+  </div>
+  <div class="tabs" id="config-tabs">
+    <div class="tab active" onclick="switchTab('config-tabs','config-tc',0,this)">API Keys</div>
+    <div class="tab" onclick="switchTab('config-tabs','config-tc',1,this)">Fraud Prevention</div>
+    <div class="tab" onclick="switchTab('config-tabs','config-tc',2,this)">Sandbox</div>
+    <div class="tab" onclick="switchTab('config-tabs','config-tc',3,this)">Webhooks</div>
+  </div>
+
+  <!-- API Keys -->
+  <div class="tab-content active" data-tabgroup="config-tc">
+    <div class="header-actions" style="margin-bottom:16px;"><button class="btn btn-primary" onclick="openModal('Create API Key','<div class=form-group><label class=form-label>Key Name</label><input class=form-input placeholder=\"e.g., Production Backend\"/></div><div class=form-group><label class=form-label>Environment</label><select class=form-input><option>Production</option><option>Sandbox</option></select></div><div class=form-group><label class=form-label>Permissions</label><div class=filter-chips><div class=\"chip active\" onclick=\"this.classList.toggle(\'active\')\">Verify</div><div class=\"chip active\" onclick=\"this.classList.toggle(\'active\')\">Read Reports</div><div class=chip onclick=\"this.classList.toggle(\'active\')\">Export Data</div><div class=chip onclick=\"this.classList.toggle(\'active\')\">Manage Partners</div></div></div><div class=form-group><label class=form-label>Rate Limit</label><select class=form-input><option>1,000 req/min (default)</option><option>5,000 req/min</option><option>10,000 req/min</option></select></div>',()=>{toast('API key created — copy it now, it won\\'t be shown again','success');closeModal()},{confirmText:'Create Key'})">+ Create API Key</button></div>
+    <div class="key-card">
+      <div style="width:8px;height:40px;background:var(--green);border-radius:4px;flex-shrink:0;"></div>
+      <div class="key-info"><div class="key-name">Production Backend</div><div class="key-meta">Created Mar 1, 2026 &bull; Last used: 2 min ago &bull; <span style="color:var(--green);font-weight:600;">Active</span></div></div>
+      <div class="key-value" onclick="toast('Key copied to clipboard','success')">pk_live_8xK4...mN7q</div>
+      <button class="btn btn-sm btn-outline" onclick="toast('Key rotated — update your backend config','warning')">Rotate</button>
+      <button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="toast('Key revoked','error')">Revoke</button>
+    </div>
+    <div class="key-card">
+      <div style="width:8px;height:40px;background:var(--orange);border-radius:4px;flex-shrink:0;"></div>
+      <div class="key-info"><div class="key-name">Sandbox Testing</div><div class="key-meta">Created Apr 10, 2026 &bull; Last used: 1 day ago &bull; <span style="color:var(--orange);font-weight:600;">Sandbox</span></div></div>
+      <div class="key-value" onclick="toast('Key copied to clipboard','success')">pk_test_3jR9...vB2x</div>
+      <button class="btn btn-sm btn-outline" onclick="toast('Key rotated','warning')">Rotate</button>
+      <button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="toast('Key revoked','error')">Revoke</button>
+    </div>
+    <div class="key-card">
+      <div style="width:8px;height:40px;background:var(--gray-300);border-radius:4px;flex-shrink:0;"></div>
+      <div class="key-info"><div class="key-name">Legacy Frontend (deprecated)</div><div class="key-meta">Created Jan 5, 2026 &bull; Last used: 30 days ago &bull; <span style="color:var(--gray-500);">Inactive</span></div></div>
+      <div class="key-value" onclick="toast('Key copied to clipboard','success')">pk_live_1aB2...zZ9w</div>
+      <button class="btn btn-sm btn-ghost" style="color:var(--red);" onclick="toast('Key deleted','error')">Delete</button>
+    </div>
+  </div>
+
+  <!-- Fraud Prevention -->
+  <div class="tab-content" data-tabgroup="config-tc">
+    <div class="header-actions" style="margin-bottom:16px;"><button class="btn btn-primary" onclick="openModal('Add Fraud Rule','<div class=form-group><label class=form-label>Rule Name</label><input class=form-input placeholder=\"e.g., Country Block List\" /></div><div class=form-group><label class=form-label>Rule Type</label><select class=form-input><option>Rate Limit</option><option>IP Block</option><option>Geo Restriction</option><option>Pattern Detection</option><option>Custom</option></select></div><div class=form-group><label class=form-label>Severity</label><select class=form-input><option>High — Auto-block + alert</option><option>Medium — Auto-block</option><option>Low — Flag for review</option></select></div><div class=form-group><label class=form-label>Threshold</label><input class=form-input placeholder=\"e.g., 10 per minute\" /></div>',()=>{toast('Fraud rule created','success');closeModal()},{confirmText:'Add Rule'})">+ Add Rule</button></div>
+    <div class="rule-card">
+      <div class="rule-info"><div class="rule-name">Rate Limiting</div><div class="rule-desc">Block IPs exceeding 10 verification requests per minute</div></div>
+      <span class="rule-severity high">High</span>
+      <label class="toggle"><input type="checkbox" checked onchange="toast(this.checked?'Rate limiting enabled':'Rate limiting disabled',this.checked?'success':'warning')"><span class="slider"></span></label>
+    </div>
+    <div class="rule-card">
+      <div class="rule-info"><div class="rule-name">Sequential Hash Detection</div><div class="rule-desc">Detect and block brute-force hash enumeration attempts</div></div>
+      <span class="rule-severity high">High</span>
+      <label class="toggle"><input type="checkbox" checked onchange="toast(this.checked?'Rule enabled':'Rule disabled',this.checked?'success':'warning')"><span class="slider"></span></label>
+    </div>
+    <div class="rule-card">
+      <div class="rule-info"><div class="rule-name">Geo Restriction</div><div class="rule-desc">Block verifications from non-US IP addresses</div></div>
+      <span class="rule-severity medium">Medium</span>
+      <label class="toggle"><input type="checkbox" checked onchange="toast(this.checked?'Geo restriction enabled':'Geo restriction disabled',this.checked?'success':'warning')"><span class="slider"></span></label>
+    </div>
+    <div class="rule-card">
+      <div class="rule-info"><div class="rule-name">Rejection Velocity</div><div class="rule-desc">Flag IPs with &gt; 5 rejections in 1 minute for review</div></div>
+      <span class="rule-severity low">Low</span>
+      <label class="toggle"><input type="checkbox" checked onchange="toast(this.checked?'Rule enabled':'Rule disabled',this.checked?'success':'warning')"><span class="slider"></span></label>
+    </div>
+    <div class="rule-card">
+      <div class="rule-info"><div class="rule-name">Bot Detection</div><div class="rule-desc">Block requests missing browser fingerprint or with known bot user agents</div></div>
+      <span class="rule-severity medium">Medium</span>
+      <label class="toggle"><input type="checkbox" onchange="toast(this.checked?'Bot detection enabled':'Bot detection disabled',this.checked?'success':'warning')"><span class="slider"></span></label>
+    </div>
+  </div>
+
+  <!-- Sandbox -->
+  <div class="tab-content" data-tabgroup="config-tc">
+    <div class="alert-banner info">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+      <div>Sandbox mode uses test data only. No real member data is accessed. Use the sandbox API key <strong class="mono">pk_test_3jR9...vB2x</strong> for testing.</div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <div class="card-header"><h3>Test Mode</h3><label class="toggle"><input type="checkbox" id="sandbox-toggle" onchange="toggleEnvFromSandbox(this.checked)"><span class="slider"></span></label></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">When enabled, all API calls use sandbox data. Test emails below will always verify successfully.</p>
+        <div class="form-group"><label class="form-label">Test Emails (always approve)</label><textarea class="form-input" rows="3">test@example.com
+demo@perkspring.com
+sandbox@walmart.com</textarea></div>
+        <div class="form-group"><label class="form-label">Test Rejection Email</label><input class="form-input" value="reject@test.com" /></div>
+        <button class="btn btn-primary" onclick="openLivePreview()">Launch Sandbox Preview</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>SDK Embed Snippet</h3><button class="btn btn-sm btn-outline" onclick="toast('Snippet copied to clipboard','success')">Copy</button></div>
+      <div class="card-body">
+        <div class="code-block"><button class="copy-btn" onclick="toast('Copied!','success')">Copy</button>&lt;script src="https://cdn.perkspring.com/verify.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  PerkSpring.init({
+    apiKey: 'pk_test_3jR9...vB2x',
+    containerId: 'perkspring-verify',
+    theme: 'light',
+    onVerified: (result) =&gt; {
+      console.log('Member verified:', result.hash);
+      // Apply discount logic here
+    },
+    onRejected: (result) =&gt; {
+      console.log('Not a member:', result.hash);
+    }
+  });
+&lt;/script&gt;
+&lt;div id="perkspring-verify"&gt;&lt;/div&gt;</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Webhooks -->
+  <div class="tab-content" data-tabgroup="config-tc">
+    <div class="header-actions" style="margin-bottom:16px;"><button class="btn btn-primary" onclick="openModal('Add Webhook','<div class=form-group><label class=form-label>Endpoint URL</label><input class=form-input placeholder=\"https://api.yourstore.com/webhooks/perkspring\" /></div><div class=form-group><label class=form-label>Events</label><div class=filter-chips><div class=\"chip active\" onclick=\"this.classList.toggle(\'active\')\">verification.approved</div><div class=\"chip active\" onclick=\"this.classList.toggle(\'active\')\">verification.rejected</div><div class=chip onclick=\"this.classList.toggle(\'active\')\">verification.flagged</div><div class=chip onclick=\"this.classList.toggle(\'active\')\">partner.connected</div><div class=chip onclick=\"this.classList.toggle(\'active\')\">fraud.detected</div></div></div><div class=form-group><label class=form-label>Signing Secret</label><input class=form-input value=\"whsec_auto_generated\" disabled /></div>',()=>{toast('Webhook endpoint added','success');closeModal()},{confirmText:'Add Webhook'})">+ Add Webhook</button></div>
+    <div class="card"><div class="card-body table-wrap" style="padding:0;">
+      <table><thead><tr><th>Endpoint</th><th>Events</th><th>Status</th><th>Last Triggered</th><th></th></tr></thead>
+      <tbody>
+        <tr><td class="mono" style="font-size:11px;">https://api.walmart.com/hooks/ps</td><td>verification.approved, .rejected</td><td><span class="status-pill active">Active</span></td><td>2 min ago</td><td><button class="btn btn-sm btn-outline" onclick="toast('Webhook edited','info')">Edit</button><button class="btn btn-sm btn-ghost" onclick="toast('Test event sent','success')">Test</button></td></tr>
+        <tr><td class="mono" style="font-size:11px;">https://api.walmart.com/hooks/fraud</td><td>fraud.detected</td><td><span class="status-pill active">Active</span></td><td>4 hrs ago</td><td><button class="btn btn-sm btn-outline" onclick="toast('Webhook edited','info')">Edit</button><button class="btn btn-sm btn-ghost" onclick="toast('Test event sent','success')">Test</button></td></tr>
+      </tbody></table>
+    </div></div>
+    <div class="card" style="margin-top:16px;"><div class="card-header"><h3>Recent Webhook Events</h3></div><div class="card-body" style="max-height:250px;overflow-y:auto;">
+      <div class="log-entry"><div class="log-time">09:43:12 AM</div><div class="log-user" style="min-width:auto;"><span class="status-pill active" style="font-size:10px;">200</span></div><div class="log-action">verification.approved → api.walmart.com (32ms)</div></div>
+      <div class="log-entry"><div class="log-time">09:42:58 AM</div><div class="log-user" style="min-width:auto;"><span class="status-pill active" style="font-size:10px;">200</span></div><div class="log-action">verification.approved → api.walmart.com (28ms)</div></div>
+      <div class="log-entry"><div class="log-time">09:41:44 AM</div><div class="log-user" style="min-width:auto;"><span class="status-pill blocked" style="font-size:10px;">500</span></div><div class="log-action">fraud.detected → api.walmart.com (timeout) — retrying</div></div>
+      <div class="log-entry"><div class="log-time">09:41:02 AM</div><div class="log-user" style="min-width:auto;"><span class="status-pill active" style="font-size:10px;">200</span></div><div class="log-action">verification.rejected → api.walmart.com (41ms)</div></div>
+    </div></div>
+  </div>
+</div>
+
+<!-- ─── TEAM & SECURITY ─── -->
+<div class="page-view" id="page-team">
+  <div class="page-header">
+    <div><h1>Team & Security</h1><div class="subtitle">Manage access, roles, and compliance</div></div>
+    <div class="header-actions">
+      <button class="btn btn-outline" onclick="document.getElementById('audit-section').scrollIntoView({behavior:'smooth'})">View Audit Log</button>
+      <button class="btn btn-primary" onclick="openInviteModal()">+ Invite Member</button>
+    </div>
+  </div>
+  <div class="compliance-row">
+    <div class="compliance-badge"><div class="compliance-icon pass">&#9989;</div><div class="compliance-info"><div class="title">SOC 2 Type II</div><div class="status">Compliant — Mar 2026</div></div></div>
+    <div class="compliance-badge"><div class="compliance-icon pass">&#128274;</div><div class="compliance-info"><div class="title">Encryption</div><div class="status">AES-256 at rest, TLS 1.3</div></div></div>
+    <div class="compliance-badge"><div class="compliance-icon pass">&#128225;</div><div class="compliance-info"><div class="title">Audit Trail</div><div class="status">12-month retention</div></div></div>
+  </div>
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-header"><h3>Team Members</h3></div>
+    <div class="card-body">
+      <div class="member-row"><div class="member-avatar" style="background:var(--teal);">SC</div><div class="member-info"><div class="name">Sarah Chen</div><div class="email">sarah.chen@walmart.com</div></div><div class="member-role">Admin</div></div>
+      <div class="member-row"><div class="member-avatar" style="background:var(--blue);">MR</div><div class="member-info"><div class="name">Mike Rodriguez</div><div class="email">mike.r@walmart.com</div></div><div class="member-role">Editor</div><div class="member-actions"><button class="btn btn-sm btn-ghost" onclick="toast('Role edited','info')">Edit</button></div></div>
+      <div class="member-row"><div class="member-avatar" style="background:#8b5cf6;">JP</div><div class="member-info"><div class="name">Jessica Park</div><div class="email">j.park@walmart.com</div></div><div class="member-role">Analyst</div><div class="member-actions"><button class="btn btn-sm btn-ghost" onclick="toast('Role edited','info')">Edit</button></div></div>
+      <div class="member-row"><div class="member-avatar" style="background:var(--orange);">DL</div><div class="member-info"><div class="name">David Lee</div><div class="email">d.lee@walmart.com</div></div><div class="member-role">Viewer</div><div class="member-actions"><button class="btn btn-sm btn-ghost" onclick="toast('Role edited','info')">Edit</button></div></div>
+    </div>
+  </div>
+  <div class="card" id="audit-section">
+    <div class="card-header"><h3>Audit Log</h3><button class="btn btn-sm btn-outline" onclick="toast('Audit log exported','success')">Export</button></div>
+    <div class="card-body">
+      <div class="log-entry"><div class="log-time">May 16 09:41 AM</div><div class="log-user">System</div><div class="log-action">Auto-blocked IP 192.168.44.12 — rate limit exceeded</div></div>
+      <div class="log-entry"><div class="log-time">May 16 08:30 AM</div><div class="log-user">Sarah Chen</div><div class="log-action">Updated fraud rule: velocity threshold 5→10/min</div></div>
+      <div class="log-entry"><div class="log-time">May 15 04:15 PM</div><div class="log-user">Sarah Chen</div><div class="log-action">Rotated production API key pk_live_8xK4...mN7q</div></div>
+      <div class="log-entry"><div class="log-time">May 15 02:00 PM</div><div class="log-user">Mike Rodriguez</div><div class="log-action">Approved A1CashBack partner integration</div></div>
+      <div class="log-entry"><div class="log-time">May 14 10:22 AM</div><div class="log-user">Sarah Chen</div><div class="log-action">Exported permissioned data — 30-day verification summary (AAA only)</div></div>
+      <div class="log-entry"><div class="log-time">May 13 03:45 PM</div><div class="log-user">Jessica Park</div><div class="log-action">Generated custom report: Partner Performance Q2</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── BILLING ─── -->
+<div class="page-view" id="page-billing">
+  <div class="page-header"><div><h1>Billing & Subscription</h1><div class="subtitle">Manage your plan, usage, and payment</div></div><button class="btn btn-outline" onclick="toast('Billing portal opening...','info')">Manage Payment</button></div>
+  <div class="stats-row" style="grid-template-columns:repeat(3,1fr);">
+    <div class="stat-card"><div class="label">Current Plan</div><div class="value" style="font-size:20px;">Enterprise</div><div class="sub">Up to 500K verifications/mo</div></div>
+    <div class="stat-card"><div class="label">Monthly Spend</div><div class="value">$1,850</div><div class="sub">Next billing: Jun 1, 2026</div></div>
+    <div class="stat-card"><div class="label">Usage This Period</div><div class="value">187,429</div><div class="sub">of 500,000 included</div></div>
+  </div>
+  <div class="card" style="margin-bottom:16px;"><div class="card-header"><h3>Usage Breakdown</h3></div><div class="card-body table-wrap" style="padding:0;">
+    <table><thead><tr><th>Item</th><th>Included</th><th>Used</th><th>Overage</th></tr></thead>
+    <tbody>
+      <tr><td>Verifications</td><td>500,000/mo</td><td>187,429</td><td>$0.00</td></tr>
+      <tr><td>API Calls</td><td>1,000,000/mo</td><td>412,800</td><td>$0.00</td></tr>
+      <tr><td>Data Exports</td><td>100/mo</td><td>12</td><td>$0.00</td></tr>
+      <tr><td>Webhook Events</td><td>Unlimited</td><td>187,429</td><td>$0.00</td></tr>
+    </tbody></table>
+  </div></div>
+  <div class="card"><div class="card-header"><h3>Invoices</h3></div><div class="card-body table-wrap" style="padding:0;">
+    <table><thead><tr><th>Date</th><th>Amount</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <tr><td>May 1, 2026</td><td>$1,850.00</td><td><span class="status-pill active">Paid</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Invoice downloaded','success')">PDF</button></td></tr>
+      <tr><td>Apr 1, 2026</td><td>$1,850.00</td><td><span class="status-pill active">Paid</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Invoice downloaded','success')">PDF</button></td></tr>
+      <tr><td>Mar 1, 2026</td><td>$1,200.00</td><td><span class="status-pill active">Paid</span></td><td><button class="btn btn-sm btn-outline" onclick="toast('Invoice downloaded','success')">PDF</button></td></tr>
+    </tbody></table>
+  </div></div>
+</div>
+
+<!-- ─── HELP ─── -->
+<div class="page-view" id="page-help">
+  <div class="page-header"><div><h1>Help & Documentation</h1><div class="subtitle">Developer docs, SDKs, and support</div></div></div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+    <div class="card" style="cursor:pointer;" onclick="openModal('Contact Support','<div class=form-group><label class=form-label>Subject</label><input class=form-input placeholder=\"Describe your issue...\" /></div><div class=form-group><label class=form-label>Category</label><select class=form-input><option>Integration Help</option><option>API Issue</option><option>Fraud Alert</option><option>Bug Report</option><option>Feature Request</option></select></div><div class=form-group><label class=form-label>Description</label><textarea class=form-input rows=4></textarea></div>',()=>{toast('Ticket submitted','success');closeModal()},{confirmText:'Submit'})">
+      <div class="card-body" style="text-align:center;padding:32px;"><div style="font-size:36px;margin-bottom:12px;">&#128172;</div><h3 style="margin-bottom:6px;">Contact Support</h3><p style="color:var(--gray-500);font-size:13px;">Avg response: &lt; 2 hours</p></div>
+    </div>
+    <div class="card" style="cursor:pointer;" onclick="toast('API docs opening...','info')">
+      <div class="card-body" style="text-align:center;padding:32px;"><div style="font-size:36px;margin-bottom:12px;">&#128214;</div><h3 style="margin-bottom:6px;">API Reference</h3><p style="color:var(--gray-500);font-size:13px;">REST API, SDKs, code samples</p></div>
+    </div>
+    <div class="card" style="cursor:pointer;" onclick="toast('Integration guides opening...','info')">
+      <div class="card-body" style="text-align:center;padding:32px;"><div style="font-size:36px;margin-bottom:12px;">&#128640;</div><h3 style="margin-bottom:6px;">Integration Guides</h3><p style="color:var(--gray-500);font-size:13px;">Step-by-step setup tutorials</p></div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<script>
+// ─── DATA ───
+const vLogData = [
+  {time:'09:43:12',hash:'a8f2c1d9...3e7b',partner:'AAA',result:'approved',ip:'72.14.201.xx',ms:'32ms'},
+  {time:'09:42:58',hash:'1bc4e7a2...9f01',partner:'EmployeeMall',result:'approved',ip:'66.102.15.xx',ms:'28ms'},
+  {time:'09:42:44',hash:'f7e3d092...2a4c',partner:'AAA',result:'approved',ip:'72.14.201.xx',ms:'35ms'},
+  {time:'09:41:44',hash:'00000001...0000',partner:'—',result:'rejected',ip:'192.168.44.12',ms:'8ms'},
+  {time:'09:41:02',hash:'c3b82f10...7d55',partner:'A1CashBack',result:'rejected',ip:'198.51.100.xx',ms:'41ms'},
+  {time:'09:40:18',hash:'5a91c0e4...b238',partner:'AAA',result:'approved',ip:'72.14.201.xx',ms:'29ms'},
+  {time:'09:39:55',hash:'e2d7f894...6c10',partner:'EmployeeMall',result:'approved',ip:'66.102.15.xx',ms:'33ms'},
+  {time:'09:38:22',hash:'8b3a4d67...1ef9',partner:'AAA',result:'flagged',ip:'10.0.0.88',ms:'120ms'},
+  {time:'09:37:10',hash:'d4c91b23...5a82',partner:'A1CashBack',result:'approved',ip:'203.0.113.xx',ms:'38ms'},
+  {time:'09:36:45',hash:'7f2e8c01...4d93',partner:'EmployeeMall',result:'approved',ip:'66.102.15.xx',ms:'26ms'},
+];
+
+const searchIndex = [
+  {label:'AAA Partner',type:'Partner',page:'partners'},
+  {label:'EmployeeMall Partner',type:'Partner',page:'partners'},
+  {label:'A1CashBack Partner',type:'Partner',page:'partners'},
+  {label:'Verification Log',type:'Report',page:'reports'},
+  {label:'Fraud Activity',type:'Report',page:'reports'},
+  {label:'API Keys',type:'Config',page:'configurations'},
+  {label:'Fraud Prevention Rules',type:'Config',page:'configurations'},
+  {label:'Sandbox Mode',type:'Config',page:'configurations'},
+  {label:'Webhooks',type:'Config',page:'configurations'},
+  {label:'Audit Log',type:'Security',page:'team'},
+  {label:'Billing & Invoices',type:'Billing',page:'billing'},
+];
+
+// ─── TOAST ───
+function toast(msg,type='info'){const c=document.getElementById('toast-container');const t=document.createElement('div');t.className=`toast ${type}`;t.textContent=msg;t.onclick=()=>{t.classList.add('exiting');setTimeout(()=>t.remove(),300)};c.appendChild(t);setTimeout(()=>{if(t.parentNode){t.classList.add('exiting');setTimeout(()=>t.remove(),300)}},3500)}
+
+// ─── NAV ───
+function showPage(id,el){document.querySelectorAll('.page-view').forEach(p=>p.classList.remove('active'));document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.getElementById('page-'+id).classList.add('active');if(el)el.classList.add('active');if(id==='dashboard')animateCounters()}
+
+// ─── TABS ───
+function switchTab(tabsId,groupName,index,tabEl){document.querySelectorAll(`#${tabsId} .tab`).forEach(t=>t.classList.remove('active'));tabEl.classList.add('active');const contents=document.querySelectorAll(`[data-tabgroup="${groupName}"]`);contents.forEach((c,i)=>{c.classList.remove('active');if(i===index)c.classList.add('active')})}
+
+// ─── ANIMATED COUNTERS ───
+function animateCounters(){document.querySelectorAll('[data-count]').forEach(el=>{const target=parseFloat(el.dataset.count);const suffix=el.dataset.suffix||'';const decimal=parseInt(el.dataset.decimal)||0;let current=0;const step=target/40;const interval=setInterval(()=>{current+=step;if(current>=target){current=target;clearInterval(interval)}const display=decimal>0?current.toFixed(decimal):Math.floor(current).toLocaleString();el.textContent=display+suffix},25)})}
+
+// ─── CHART ───
+function buildChart(){const chart=document.getElementById('chart');chart.innerHTML='';const days=['1','3','5','7','9','11','13','15','17','19','21','23','25','27','29'];const aData=[420,380,510,490,620,580,710,680,740,820,790,860,920,880,950];const rData=[20,25,18,30,22,28,35,20,25,32,18,22,28,340,15];const fData=[5,3,8,4,6,3,7,5,4,8,3,5,6,12,4];days.forEach((d,i)=>{const g=document.createElement('div');g.className='chart-bar-group';g.innerHTML=`<div class="chart-tooltip">${d} May: ${aData[i]} approved, ${rData[i]} rejected, ${fData[i]} flagged</div><div class="chart-bars"><div class="chart-bar approved" style="height:0" data-h="${aData[i]/5}"></div><div class="chart-bar rejected" style="height:0" data-h="${Math.min(rData[i],60)/1}"></div><div class="chart-bar pending" style="height:0" data-h="${fData[i]*2}"></div></div><div class="chart-label">${d}</div>`;chart.appendChild(g)});setTimeout(()=>{chart.querySelectorAll('.chart-bar').forEach(b=>{b.style.height=b.dataset.h+'px'})},100)}
+
+// ─── VERIFICATION LOG ───
+function renderVLog(data){const tbody=document.getElementById('vlog-body');tbody.innerHTML=data.map(v=>{const cls=v.result==='approved'?'active':v.result==='rejected'?'blocked':'pending';return`<tr><td class="mono">${v.time}</td><td class="mono">${v.hash}</td><td>${v.partner}</td><td><span class="status-pill ${cls}">${v.result.charAt(0).toUpperCase()+v.result.slice(1)}</span></td><td class="mono">${v.ip}</td><td>${v.ms}</td></tr>`}).join('')}
+function filterVLog(){const q=document.getElementById('vlog-search').value.toLowerCase();const filtered=q?vLogData.filter(v=>v.hash.includes(q)||v.ip.includes(q)||v.partner.toLowerCase().includes(q)):vLogData;renderVLog(filtered)}
+
+// ─── ENVIRONMENT TOGGLE ───
+let isLive=true;
+function toggleEnv(){isLive=!isLive;const badge=document.getElementById('env-badge');badge.textContent=isLive?'LIVE':'SANDBOX';badge.className='env-badge '+(isLive?'live':'sandbox');toast(isLive?'Switched to LIVE mode':'Switched to SANDBOX mode',isLive?'success':'warning')}
+function toggleEnvFromSandbox(checked){if(checked&&isLive){isLive=false;document.getElementById('env-badge').textContent='SANDBOX';document.getElementById('env-badge').className='env-badge sandbox';toast('Sandbox mode enabled','warning')}else if(!checked&&!isLive){isLive=true;document.getElementById('env-badge').textContent='LIVE';document.getElementById('env-badge').className='env-badge live';toast('Switched back to LIVE','success')}}
+
+// ─── NOTIFICATIONS ───
+function toggleNotif(){document.getElementById('notif-dropdown').classList.toggle('visible')}
+function markAllRead(e){e.stopPropagation();document.querySelectorAll('.notif-item.unread').forEach(n=>n.classList.remove('unread'));document.getElementById('notif-dot').style.display='none';toast('All read','success')}
+document.addEventListener('click',e=>{if(!e.target.closest('#notif-bell'))document.getElementById('notif-dropdown').classList.remove('visible')})
+
+// ─── SEARCH ───
+function handleSearch(){const q=document.getElementById('global-search').value.toLowerCase();const results=document.getElementById('search-results');if(q.length<2){results.classList.remove('visible');return}const matches=searchIndex.filter(s=>s.label.toLowerCase().includes(q));results.innerHTML=matches.length?matches.slice(0,6).map(m=>`<div class="search-result-item" onclick="showPage('${m.page}',document.querySelector('[data-page=${m.page}]'));document.getElementById('global-search').value='';document.getElementById('search-results').classList.remove('visible');toast('Navigated to ${m.label}','info')"><span class="sr-type">${m.type}</span><span>${m.label}</span></div>`).join(''):'<div class="search-result-item"><span style="color:var(--sidebar-text)">No results</span></div>';results.classList.add('visible')}
+document.getElementById('global-search').addEventListener('blur',()=>setTimeout(()=>document.getElementById('search-results').classList.remove('visible'),200))
+
+// ─── MODAL ───
+function openModal(title,bodyHtml,onConfirm,opts={}){const m=document.getElementById('modal-container');m.className=`modal ${opts.large?'modal-lg':''}`;m.innerHTML=`<div class="modal-header"><h2>${title}</h2><button class="modal-close" onclick="closeModal()">&#215;</button></div><div class="modal-body">${bodyHtml}</div>${onConfirm?`<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Cancel</button><button class="btn btn-primary" id="modal-confirm">${opts.confirmText||'Confirm'}</button></div>`:`<div class="modal-footer"><button class="btn btn-outline" onclick="closeModal()">Close</button></div>`}`;if(onConfirm)document.getElementById('modal-confirm').onclick=onConfirm;document.getElementById('modal-overlay').classList.add('visible')}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('visible')}
+
+function openLivePreview(){openModal('Sandbox Preview','<iframe src="index.html" class="preview-frame"></iframe>',null,{large:true})}
+
+function openReportBuilder(){openModal('Custom Report Builder','<div class=form-group><label class=form-label>Report Name</label><input class=form-input placeholder="e.g., May Verification Summary" /></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div class=form-group><label class=form-label>Type</label><select class=form-input><option>Verifications</option><option>Redemptions</option><option>Fraud Activity</option><option>Partner Performance</option></select></div><div class=form-group><label class=form-label>Date Range</label><select class=form-input><option>Last 7 days</option><option selected>Last 30 days</option><option>Last 90 days</option><option>Custom</option></select></div><div class=form-group><label class=form-label>Group By</label><select class=form-input><option>Day</option><option>Week</option><option>Partner</option><option>Discount Code</option></select></div><div class=form-group><label class=form-label>Format</label><select class=form-input><option>PDF</option><option>CSV</option><option>Excel</option></select></div></div><div class=form-group><label class=form-label>Include Partners</label><div class=filter-chips><div class="chip active" onclick="this.classList.toggle(\'active\')">All</div><div class=chip onclick="this.classList.toggle(\'active\')">AAA</div><div class=chip onclick="this.classList.toggle(\'active\')">EmployeeMall</div><div class=chip onclick="this.classList.toggle(\'active\')">A1CashBack</div></div></div>',()=>{toast('Report generating...','success');closeModal()},{confirmText:'Generate',large:true})}
+
+function openExportModal(){openModal('Permissioned Data Export','<div class="alert-banner info" style="margin-bottom:16px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><div>Exports contain only hashed identifiers and aggregate data. No PII is included.</div></div><div class=form-group><label class=form-label>Data Type</label><select class=form-input><option>Verification Log (hashes + timestamps)</option><option>Redemption Summary (aggregate)</option><option>Fraud Attempts (IPs + patterns)</option><option>Partner Performance (aggregate)</option></select></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;"><div class=form-group><label class=form-label>Date Range</label><select class=form-input><option>Last 7 days</option><option selected>Last 30 days</option><option>Last 90 days</option></select></div><div class=form-group><label class=form-label>Format</label><select class=form-input><option>CSV</option><option>JSON</option><option>Excel</option></select></div></div><div class=form-group><label class=form-label>Partner Filter</label><select class=form-input><option>All Partners</option><option>AAA only</option><option>EmployeeMall only</option><option>A1CashBack only</option></select></div>',()=>{toast('Export started — you\\'ll receive a download link via email','success');closeModal()},{confirmText:'Export',large:true})}
+
+function openInviteModal(){openModal('Invite Team Member','<div class=form-group><label class=form-label>Full Name</label><input class=form-input placeholder="Jane Doe" /></div><div class=form-group><label class=form-label>Email</label><input class=form-input placeholder="jane@company.com" /></div><div class=form-group><label class=form-label>Role</label><select class=form-input><option>Admin</option><option>Editor</option><option>Viewer</option><option>Analyst</option></select></div>',()=>{toast('Invitation sent','success');closeModal()},{confirmText:'Send Invite'})}
+
+// ─── KEYBOARD ───
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();if(e.key==='/'&&!e.target.closest('input,textarea,select')){e.preventDefault();document.getElementById('global-search').focus()}})
+
+// ─── INIT ───
+buildChart();
+renderVLog(vLogData);
+animateCounters();
+</script>
+</body>
+</html>
